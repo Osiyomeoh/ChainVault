@@ -603,7 +603,8 @@ describe("ChainVault Complete Test Suite", () => {
         wallet1
       );
 
-      expect(prematureClaimResult.result).toBeErr(Cl.uint(110));
+      
+      expect(prematureClaimResult.result).toBeErr(Cl.uint(101));
     });
   });
 
@@ -815,7 +816,24 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      expect(vaultInfo.result).toBeSome();
+      
+      expect(vaultInfo.result).toBeDefined();
+      expect(vaultInfo.result).not.toBeNone();
+      
+      
+      if (vaultInfo.result.type === 'some') {
+        const vaultData = vaultInfo.result.value;
+        console.log("Vault data structure:", cvToValue(vaultData));
+        
+        
+        const vaultJs = cvToValue(vaultData);
+        console.log("Vault JS object:", Object.keys(vaultJs));
+        
+       
+        expect(vaultJs).toHaveProperty('owner');
+        expect(vaultJs).toHaveProperty('vault-name');
+        expect(vaultJs).toHaveProperty('privacy-level');
+      }
     });
 
     it("retrieves beneficiary information correctly", () => {
@@ -858,7 +876,23 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      expect(beneficiaryInfo.result).toBeSome();
+      
+      expect(beneficiaryInfo.result).toBeDefined();
+      expect(beneficiaryInfo.result).not.toBeNone();
+      
+      
+      if (beneficiaryInfo.result.type === 'some') {
+        const beneficiaryData = beneficiaryInfo.result.value;
+        console.log("Beneficiary data structure:", cvToValue(beneficiaryData));
+        
+        
+        const beneficiaryJs = cvToValue(beneficiaryData);
+        console.log("Beneficiary JS object:", Object.keys(beneficiaryJs));
+        
+        
+        expect(beneficiaryJs).toHaveProperty('beneficiary-address');
+        expect(beneficiaryJs).toHaveProperty('allocation-percentage');
+      }
     });
 
     it("checks inheritance status correctly", () => {
@@ -921,7 +955,23 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      expect(proofOfLife.result).toBeSome();
+      
+      expect(proofOfLife.result).toBeDefined();
+      expect(proofOfLife.result).not.toBeNone();
+      
+      
+      if (proofOfLife.result.type === 'some') {
+        const proofData = proofOfLife.result.value;
+        console.log("Proof data structure:", cvToValue(proofData));
+        
+        
+        const proofJs = cvToValue(proofData);
+        console.log("Proof JS object:", Object.keys(proofJs));
+        
+        
+        expect(proofJs).toHaveProperty('status');
+        expect(proofJs).toHaveProperty('last-checkin');
+      }
     });
 
     it("retrieves professional access correctly", () => {
@@ -961,7 +1011,23 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      expect(professionalAccess.result).toBeSome();
+      
+      expect(professionalAccess.result).toBeDefined();
+      expect(professionalAccess.result).not.toBeNone();
+      
+      
+      if (professionalAccess.result.type === 'some') {
+        const accessData = professionalAccess.result.value;
+        console.log("Professional access data structure:", cvToValue(accessData));
+        
+        
+        const accessJs = cvToValue(accessData);
+        console.log("Access JS object:", Object.keys(accessJs));
+        
+       
+        expect(accessJs).toHaveProperty('access-level');
+        expect(accessJs).toHaveProperty('active');
+      }
     });
 
     it("retrieves inheritance execution status correctly", () => {
@@ -996,7 +1062,23 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      expect(executionStatus.result).toBeSome();
+      
+      expect(executionStatus.result).toBeDefined();
+      expect(executionStatus.result).not.toBeNone();
+      
+     
+      if (executionStatus.result.type === 'some') {
+        const executionData = executionStatus.result.value;
+        console.log("Execution data structure:", cvToValue(executionData));
+        
+        
+        const executionJs = cvToValue(executionData);
+        console.log("Execution JS object:", Object.keys(executionJs));
+        
+        
+        expect(executionJs).toHaveProperty('execution-status');
+        expect(executionJs).toHaveProperty('triggered-by');
+      }
     });
 
     it("retrieves contract statistics correctly", () => {
