@@ -1,3 +1,10 @@
+;; String constants for consistent UTF-8 usage
+(define-constant STATUS_ACTIVE u"active")
+(define-constant STATUS_INHERITANCE_TRIGGERED u"inherit-triggered")
+(define-constant STATUS_PENDING u"pending")
+(define-constant STATUS_EXPIRED u"expired")
+(define-constant STATUS_EMERGENCY_PAUSED u"emergency-paused")
+
 (define-constant CONTRACT_OWNER tx-sender)
 (define-constant ERR_UNAUTHORIZED (err u100))
 (define-constant ERR_VAULT_NOT_FOUND (err u101))
@@ -24,7 +31,7 @@
     beneficiaries-hash: (buff 32),
     legal-document-hash: (buff 32),
     grace-period: uint,
-    emergency-contacts: (list 3 principal),
+    emergency-contacts: (list 10 principal),
     vault-name: (string-utf8 50),
     total-btc-value: uint
   }
@@ -99,14 +106,14 @@
       { vault-id: vault-id }
       {
         owner: tx-sender,
-        created-at: block-height,
-        last-activity: block-height,
+        created-at: stacks-block-height,
+        last-activity: stacks-block-height,
         inheritance-delay: inheritance-delay,
-        status: "active",
+        status: STATUS_ACTIVE,
         privacy-level: privacy-level,
         bitcoin-addresses-hash: bitcoin-addresses-hash,
         beneficiaries-hash: beneficiaries-hash,
-        legal-document-hash: 0x00,
+        legal-document-hash: 0x0000000000000000000000000000000000000000000000000000000000000000,
         grace-period: grace-period,
         emergency-contacts: (list),
         vault-name: vault-name,
@@ -116,11 +123,11 @@
     (map-set proof-of-life
       { vault-id: vault-id }
       {
-        last-checkin: block-height,
-        next-deadline: (+ block-height inheritance-delay),
+        last-checkin: stacks-block-height,
+        next-deadline: (+ stacks-block-height inheritance-delay),
         reminder-count: u0,
-        grace-period-end: (+ block-height inheritance-delay grace-period),
-        status: "active"
+        grace-period-end: (+ stacks-block-height inheritance-delay grace-period),
+        status: STATUS_ACTIVE
       })
     
     (var-set total-vaults (+ (var-get total-vaults) u1))
@@ -130,7 +137,7 @@
       vault-id: vault-id,
       owner: tx-sender,
       privacy-level: privacy-level,
-      block-height: block-height
+      stacks-block-height: stacks-block-height
     })
     
     (ok vault-id)))
@@ -177,26 +184,26 @@
     (map-set inheritance-vaults
       { vault-id: vault-id }
       (merge vault { 
-        last-activity: block-height,
-        status: "active"
+        last-activity: stacks-block-height,
+        status: STATUS_ACTIVE
       }))
     
     (map-set proof-of-life
       { vault-id: vault-id }
       (merge proof {
-        last-checkin: block-height,
-        next-deadline: (+ block-height (get inheritance-delay vault)),
+        last-checkin: stacks-block-height,
+        next-deadline: (+ stacks-block-height (get inheritance-delay vault)),
         reminder-count: u0,
-        grace-period-end: (+ block-height (get inheritance-delay vault) (get grace-period vault)),
-        status: "active"
+        grace-period-end: (+ stacks-block-height (get inheritance-delay vault) (get grace-period vault)),
+        status: STATUS_ACTIVE
       }))
     
     (print {
       event: "proof-of-life-updated",
       vault-id: vault-id,
       owner: tx-sender,
-      next-deadline: (+ block-height (get inheritance-delay vault)),
-      block-height: block-height
+      next-deadline: (+ stacks-block-height (get inheritance-delay vault)),
+      stacks-block-height: stacks-block-height
     })
     
     (ok true)))
@@ -206,19 +213,19 @@
     (vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
     (proof (unwrap! (map-get? proof-of-life { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
     
-    (asserts! (>= block-height (get grace-period-end proof)) ERR_INHERITANCE_NOT_DUE)
-    (asserts! (is-eq (get status vault) "active") ERR_INHERITANCE_ALREADY_TRIGGERED)
+    (asserts! (>= stacks-block-height (get grace-period-end proof)) ERR_INHERITANCE_NOT_DUE)
+    (asserts! (is-eq (get status vault) STATUS_ACTIVE) ERR_INHERITANCE_ALREADY_TRIGGERED)
     
     (map-set inheritance-vaults
       { vault-id: vault-id }
-      (merge vault { status: "inheritance-triggered" }))
+      (merge vault { status: STATUS_INHERITANCE_TRIGGERED }))
     
     (map-set inheritance-executions
       { vault-id: vault-id }
       {
-        triggered-at: block-height,
+        triggered-at: stacks-block-height,
         triggered-by: tx-sender,
-        execution-status: "pending",
+        execution-status: STATUS_PENDING,
         beneficiary-claims: (list),
         total-fees: u0,
         completion-percentage: u0
@@ -226,13 +233,13 @@
     
     (map-set proof-of-life
       { vault-id: vault-id }
-      (merge proof { status: "expired" }))
+      (merge proof { status: STATUS_EXPIRED }))
     
     (print {
       event: "inheritance-triggered",
       vault-id: vault-id,
       triggered-by: tx-sender,
-      triggered-at: block-height,
+      triggered-at: stacks-block-height,
       vault-owner: (get owner vault)
     })
     
@@ -247,7 +254,7 @@
     (beneficiary (unwrap! (map-get? vault-beneficiaries { vault-id: vault-id, beneficiary-index: beneficiary-index }) ERR_INVALID_BENEFICIARY))
     (execution (unwrap! (map-get? inheritance-executions { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
     
-    (asserts! (is-eq (get status vault) "inheritance-triggered") (err u110))
+    (asserts! (is-eq (get status vault) STATUS_INHERITANCE_TRIGGERED) (err u110))
     (asserts! (is-eq (get beneficiary-address beneficiary) tx-sender) ERR_UNAUTHORIZED)
     
     (let ((inheritance-amount (/ (* (get total-btc-value vault) (get allocation-percentage beneficiary)) u10000)))
@@ -258,7 +265,7 @@
         beneficiary: tx-sender,
         beneficiary-index: beneficiary-index,
         amount: inheritance-amount,
-        block-height: block-height
+        stacks-block-height: stacks-block-height
       })
       
       (ok inheritance-amount))))
@@ -277,7 +284,7 @@
       { vault-id: vault-id, advisor: advisor }
       {
         access-level: access-level,
-        granted-at: block-height,
+        granted-at: stacks-block-height,
         granted-by: tx-sender,
         active: true
       })
@@ -308,7 +315,7 @@
 
 (define-read-only (is-inheritance-due (vault-id (string-utf8 36)))
   (match (map-get? proof-of-life { vault-id: vault-id })
-    proof (>= block-height (get grace-period-end proof))
+    proof (>= stacks-block-height (get grace-period-end proof))
     false))
 
 (define-read-only (get-total-vaults)
@@ -335,17 +342,12 @@
     
     (map-set inheritance-vaults
       { vault-id: vault-id }
-      (merge vault { status: "emergency-paused" }))
+      (merge vault { status: STATUS_EMERGENCY_PAUSED }))
     
     (print { event: "emergency-pause", vault-id: vault-id })
     (ok true)))
 
-(define-private (init-contract)
-  (begin
-    (var-set contract-version u1)
-    (var-set total-vaults u0)
-    (var-set inheritance-fee u100)
-    (print { event: "contract-initialized", version: u1 })
-    true))
-
-(init-contract)
+;; Initialize contract
+(var-set contract-version u1)
+(var-set total-vaults u0)
+(var-set inheritance-fee u100)
