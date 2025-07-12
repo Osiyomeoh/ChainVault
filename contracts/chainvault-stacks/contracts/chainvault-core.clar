@@ -1,4 +1,3 @@
-;; Constants
 (define-constant CONTRACT_OWNER tx-sender)
 (define-constant ERR_UNAUTHORIZED (err u100))
 (define-constant ERR_VAULT_NOT_FOUND (err u101))
@@ -8,11 +7,10 @@
 (define-constant ERR_INHERITANCE_ALREADY_TRIGGERED (err u105))
 (define-constant ERR_INVALID_BENEFICIARY (err u106))
 
-;; Data Variables
+(define-data-var contract-version uint u1)
 (define-data-var total-vaults uint u0)
 (define-data-var inheritance-fee uint u100)
 
-;; Enhanced vault storage with privacy and encryption
 (define-map inheritance-vaults
   { vault-id: (string-utf8 36) }
   {
@@ -24,13 +22,14 @@
     privacy-level: uint,
     bitcoin-addresses-hash: (buff 32),
     beneficiaries-hash: (buff 32),
+    legal-document-hash: (buff 32),
     grace-period: uint,
+    emergency-contacts: (list 3 principal),
     vault-name: (string-utf8 50),
     total-btc-value: uint
   }
 )
 
-;; Beneficiary allocations
 (define-map vault-beneficiaries
   { vault-id: (string-utf8 36), beneficiary-index: uint }
   {
@@ -42,7 +41,6 @@
   }
 )
 
-;; Enhanced proof of life with grace periods
 (define-map proof-of-life
   { vault-id: (string-utf8 36) }
   {
@@ -54,7 +52,33 @@
   }
 )
 
-;; Create enhanced vault with privacy features
+(define-map inheritance-executions
+  { vault-id: (string-utf8 36) }
+  {
+    triggered-at: uint,
+    triggered-by: principal,
+    execution-status: (string-utf8 20),
+    beneficiary-claims: (list 10 {
+      beneficiary: principal,
+      amount: uint,
+      claimed: bool,
+      claim-block: uint
+    }),
+    total-fees: uint,
+    completion-percentage: uint
+  }
+)
+
+(define-map professional-access
+  { vault-id: (string-utf8 36), advisor: principal }
+  {
+    access-level: uint,
+    granted-at: uint,
+    granted-by: principal,
+    active: bool
+  }
+)
+
 (define-public (create-vault
   (vault-id (string-utf8 36))
   (vault-name (string-utf8 50))
@@ -70,7 +94,8 @@
     (asserts! (and (>= privacy-level u1) (<= privacy-level u4)) ERR_INVALID_PRIVACY_LEVEL)
     (asserts! (> inheritance-delay u0) (err u107))
     (asserts! (> grace-period u0) (err u108))
-                (map-set inheritance-vaults
+    
+    (map-set inheritance-vaults
       { vault-id: vault-id }
       {
         owner: tx-sender,
@@ -81,10 +106,13 @@
         privacy-level: privacy-level,
         bitcoin-addresses-hash: bitcoin-addresses-hash,
         beneficiaries-hash: beneficiaries-hash,
+        legal-document-hash: 0x00,
         grace-period: grace-period,
+        emergency-contacts: (list),
         vault-name: vault-name,
         total-btc-value: u0
       })
+    
     (map-set proof-of-life
       { vault-id: vault-id }
       {
@@ -94,8 +122,10 @@
         grace-period-end: (+ block-height inheritance-delay grace-period),
         status: "active"
       })
+    
     (var-set total-vaults (+ (var-get total-vaults) u1))
-        (print {
+    
+    (print {
       event: "vault-created",
       vault-id: vault-id,
       owner: tx-sender,
@@ -105,7 +135,6 @@
     
     (ok vault-id)))
 
-;; Add beneficiary to vault
 (define-public (add-beneficiary
   (vault-id (string-utf8 36))
   (beneficiary-index uint)
@@ -115,9 +144,11 @@
   (encrypted-metadata (buff 128)))
   
   (let ((vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    
     (asserts! (is-eq (get owner vault) tx-sender) ERR_UNAUTHORIZED)
     (asserts! (<= allocation-percentage u10000) (err u109))
-        (map-set vault-beneficiaries
+    
+    (map-set vault-beneficiaries
       { vault-id: vault-id, beneficiary-index: beneficiary-index }
       {
         beneficiary-address: beneficiary-address,
@@ -126,6 +157,7 @@
         notification-preference: (get privacy-level vault),
         encrypted-metadata: encrypted-metadata
       })
+    
     (print {
       event: "beneficiary-added",
       vault-id: vault-id,
@@ -135,18 +167,20 @@
     
     (ok true)))
 
-;; Update proof of life (enhanced with grace period)
 (define-public (update-proof-of-life (vault-id (string-utf8 36)))
   (let (
     (vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
     (proof (unwrap! (map-get? proof-of-life { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    
     (asserts! (is-eq (get owner vault) tx-sender) ERR_UNAUTHORIZED)
+    
     (map-set inheritance-vaults
       { vault-id: vault-id }
       (merge vault { 
         last-activity: block-height,
         status: "active"
       }))
+    
     (map-set proof-of-life
       { vault-id: vault-id }
       (merge proof {
@@ -156,6 +190,7 @@
         grace-period-end: (+ block-height (get inheritance-delay vault) (get grace-period vault)),
         status: "active"
       }))
+    
     (print {
       event: "proof-of-life-updated",
       vault-id: vault-id,
@@ -166,19 +201,33 @@
     
     (ok true)))
 
-;; Trigger inheritance (with grace period)
 (define-public (trigger-inheritance (vault-id (string-utf8 36)))
   (let (
     (vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
     (proof (unwrap! (map-get? proof-of-life { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    
     (asserts! (>= block-height (get grace-period-end proof)) ERR_INHERITANCE_NOT_DUE)
     (asserts! (is-eq (get status vault) "active") ERR_INHERITANCE_ALREADY_TRIGGERED)
+    
     (map-set inheritance-vaults
       { vault-id: vault-id }
       (merge vault { status: "inheritance-triggered" }))
+    
+    (map-set inheritance-executions
+      { vault-id: vault-id }
+      {
+        triggered-at: block-height,
+        triggered-by: tx-sender,
+        execution-status: "pending",
+        beneficiary-claims: (list),
+        total-fees: u0,
+        completion-percentage: u0
+      })
+    
     (map-set proof-of-life
       { vault-id: vault-id }
       (merge proof { status: "expired" }))
+    
     (print {
       event: "inheritance-triggered",
       vault-id: vault-id,
@@ -189,17 +238,20 @@
     
     (ok true)))
 
-;; Basic inheritance claim (simplified)
 (define-public (claim-inheritance 
   (vault-id (string-utf8 36))
   (beneficiary-index uint))
   
   (let (
     (vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND))
-    (beneficiary (unwrap! (map-get? vault-beneficiaries { vault-id: vault-id, beneficiary-index: beneficiary-index }) ERR_INVALID_BENEFICIARY)))
+    (beneficiary (unwrap! (map-get? vault-beneficiaries { vault-id: vault-id, beneficiary-index: beneficiary-index }) ERR_INVALID_BENEFICIARY))
+    (execution (unwrap! (map-get? inheritance-executions { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    
     (asserts! (is-eq (get status vault) "inheritance-triggered") (err u110))
     (asserts! (is-eq (get beneficiary-address beneficiary) tx-sender) ERR_UNAUTHORIZED)
-        (let ((inheritance-amount (/ (* (get total-btc-value vault) (get allocation-percentage beneficiary)) u10000)))
+    
+    (let ((inheritance-amount (/ (* (get total-btc-value vault) (get allocation-percentage beneficiary)) u10000)))
+      
       (print {
         event: "inheritance-claimed",
         vault-id: vault-id,
@@ -211,7 +263,35 @@
       
       (ok inheritance-amount))))
 
-;; Read-only functions
+(define-public (grant-professional-access
+  (vault-id (string-utf8 36))
+  (advisor principal)
+  (access-level uint))
+  
+  (let ((vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    
+    (asserts! (is-eq (get owner vault) tx-sender) ERR_UNAUTHORIZED)
+    (asserts! (and (>= access-level u1) (<= access-level u3)) (err u111))
+    
+    (map-set professional-access
+      { vault-id: vault-id, advisor: advisor }
+      {
+        access-level: access-level,
+        granted-at: block-height,
+        granted-by: tx-sender,
+        active: true
+      })
+    
+    (print {
+      event: "professional-access-granted",
+      vault-id: vault-id,
+      advisor: advisor,
+      access-level: access-level,
+      granted-by: tx-sender
+    })
+    
+    (ok true)))
+
 (define-read-only (get-vault (vault-id (string-utf8 36)))
   (map-get? inheritance-vaults { vault-id: vault-id }))
 
@@ -223,6 +303,9 @@
   (beneficiary-index uint))
   (map-get? vault-beneficiaries { vault-id: vault-id, beneficiary-index: beneficiary-index }))
 
+(define-read-only (get-inheritance-execution (vault-id (string-utf8 36)))
+  (map-get? inheritance-executions { vault-id: vault-id }))
+
 (define-read-only (is-inheritance-due (vault-id (string-utf8 36)))
   (match (map-get? proof-of-life { vault-id: vault-id })
     proof (>= block-height (get grace-period-end proof))
@@ -231,10 +314,38 @@
 (define-read-only (get-total-vaults)
   (var-get total-vaults))
 
-;; Administrative function
+(define-read-only (get-contract-version)
+  (var-get contract-version))
+
+(define-read-only (get-professional-access
+  (vault-id (string-utf8 36))
+  (advisor principal))
+  (map-get? professional-access { vault-id: vault-id, advisor: advisor }))
+
 (define-public (set-inheritance-fee (new-fee uint))
   (begin
     (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
     (asserts! (<= new-fee u1000) (err u112))
     (var-set inheritance-fee new-fee)
     (ok true)))
+
+(define-public (emergency-pause-vault (vault-id (string-utf8 36)))
+  (let ((vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
+    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
+    
+    (map-set inheritance-vaults
+      { vault-id: vault-id }
+      (merge vault { status: "emergency-paused" }))
+    
+    (print { event: "emergency-pause", vault-id: vault-id })
+    (ok true)))
+
+(define-private (init-contract)
+  (begin
+    (var-set contract-version u1)
+    (var-set total-vaults u0)
+    (var-set inheritance-fee u100)
+    (print { event: "contract-initialized", version: u1 })
+    true))
+
+(init-contract)
