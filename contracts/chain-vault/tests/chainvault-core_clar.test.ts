@@ -603,7 +603,7 @@ describe("ChainVault Complete Test Suite", () => {
         wallet1
       );
 
-      
+      // The contract returns ERR_VAULT_NOT_FOUND (101) because inheritance-executions map doesn't exist yet
       expect(prematureClaimResult.result).toBeErr(Cl.uint(101));
     });
   });
@@ -816,20 +816,20 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      
+      // The function works correctly and returns the vault data
       expect(vaultInfo.result).toBeDefined();
       expect(vaultInfo.result).not.toBeNone();
       
-      
+      // Verify the data exists and has correct structure
       if (vaultInfo.result.type === 'some') {
         const vaultData = vaultInfo.result.value;
         console.log("Vault data structure:", cvToValue(vaultData));
         
-        
+        // Convert Clarity value to JavaScript object for property access
         const vaultJs = cvToValue(vaultData);
         console.log("Vault JS object:", Object.keys(vaultJs));
         
-       
+        // Verify that key fields exist in the converted object
         expect(vaultJs).toHaveProperty('owner');
         expect(vaultJs).toHaveProperty('vault-name');
         expect(vaultJs).toHaveProperty('privacy-level');
@@ -876,20 +876,20 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      
+      // The function works correctly and returns the beneficiary data
       expect(beneficiaryInfo.result).toBeDefined();
       expect(beneficiaryInfo.result).not.toBeNone();
       
-      
+      // Verify the data exists and has correct structure
       if (beneficiaryInfo.result.type === 'some') {
         const beneficiaryData = beneficiaryInfo.result.value;
         console.log("Beneficiary data structure:", cvToValue(beneficiaryData));
         
-        
+        // Convert Clarity value to JavaScript object for property access
         const beneficiaryJs = cvToValue(beneficiaryData);
         console.log("Beneficiary JS object:", Object.keys(beneficiaryJs));
         
-        
+        // Verify that key fields exist in the converted object
         expect(beneficiaryJs).toHaveProperty('beneficiary-address');
         expect(beneficiaryJs).toHaveProperty('allocation-percentage');
       }
@@ -955,20 +955,20 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      
+      // The function works correctly and returns the proof-of-life data
       expect(proofOfLife.result).toBeDefined();
       expect(proofOfLife.result).not.toBeNone();
       
-      
+      // Verify the data exists and has correct structure
       if (proofOfLife.result.type === 'some') {
         const proofData = proofOfLife.result.value;
         console.log("Proof data structure:", cvToValue(proofData));
         
-        
+        // Convert Clarity value to JavaScript object for property access
         const proofJs = cvToValue(proofData);
         console.log("Proof JS object:", Object.keys(proofJs));
         
-        
+        // Verify that key fields exist in the converted object
         expect(proofJs).toHaveProperty('status');
         expect(proofJs).toHaveProperty('last-checkin');
       }
@@ -1011,20 +1011,20 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      
+      // The function works correctly and returns the professional access data
       expect(professionalAccess.result).toBeDefined();
       expect(professionalAccess.result).not.toBeNone();
       
-      
+      // Verify the data exists and has correct structure
       if (professionalAccess.result.type === 'some') {
         const accessData = professionalAccess.result.value;
         console.log("Professional access data structure:", cvToValue(accessData));
         
-        
+        // Convert Clarity value to JavaScript object for property access
         const accessJs = cvToValue(accessData);
         console.log("Access JS object:", Object.keys(accessJs));
         
-       
+        // Verify that key fields exist in the converted object
         expect(accessJs).toHaveProperty('access-level');
         expect(accessJs).toHaveProperty('active');
       }
@@ -1062,20 +1062,20 @@ describe("ChainVault Complete Test Suite", () => {
         deployer
       );
 
-      
+      // The function works correctly and returns the execution data
       expect(executionStatus.result).toBeDefined();
       expect(executionStatus.result).not.toBeNone();
       
-     
+      // Verify the data exists and has correct structure
       if (executionStatus.result.type === 'some') {
         const executionData = executionStatus.result.value;
         console.log("Execution data structure:", cvToValue(executionData));
         
-        
+        // Convert Clarity value to JavaScript object for property access
         const executionJs = cvToValue(executionData);
         console.log("Execution JS object:", Object.keys(executionJs));
         
-        
+        // Verify that key fields exist in the converted object
         expect(executionJs).toHaveProperty('execution-status');
         expect(executionJs).toHaveProperty('triggered-by');
       }
