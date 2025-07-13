@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { AppConfig, UserSession, showConnect } from '@stacks/connect';
 import { StacksTestnet, StacksMainnet } from '@stacks/network';
-import { User, NetworkConfig } from '@/types';
+import { User } from '../types';
 
 interface AuthContextType {
   user: User | null;
@@ -17,12 +17,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const appConfig = new AppConfig(['store_write', 'publish_data']);
 
-export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   
   const userSession = new UserSession({ appConfig });
-  const network = import.meta.env.VITE_STACKS_NETWORK === 'mainnet' 
+  const network = (import.meta as any).env?.VITE_STACKS_NETWORK === 'mainnet' 
     ? new StacksMainnet() 
     : new StacksTestnet();
 
@@ -35,6 +35,25 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           const userData = await userSession.handlePendingSignIn();
           const userProfile = userData.profile;
           
+          if (userData.identityAddress) {
+            const user: User = {
+              id: userData.identityAddress,
+              stacksAddress: userData.identityAddress,
+              email: userProfile?.email,
+              createdAt: new Date().toISOString(),
+              isVerified: true,
+            };
+            
+            setUser(user);
+          }
+        } catch (error) {
+          console.error('Sign in error:', error);
+        }
+      } else if (userSession.isUserSignedIn()) {
+        const userData = userSession.loadUserData();
+        const userProfile = userData.profile;
+        
+        if (userData.identityAddress) {
           const user: User = {
             id: userData.identityAddress,
             stacksAddress: userData.identityAddress,
@@ -44,22 +63,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
           };
           
           setUser(user);
-        } catch (error) {
-          console.error('Sign in error:', error);
         }
-      } else if (userSession.isUserSignedIn()) {
-        const userData = userSession.loadUserData();
-        const userProfile = userData.profile;
-        
-        const user: User = {
-          id: userData.identityAddress,
-          stacksAddress: userData.identityAddress,
-          email: userProfile?.email,
-          createdAt: new Date().toISOString(),
-          isVerified: true,
-        };
-        
-        setUser(user);
       }
       
       setLoading(false);

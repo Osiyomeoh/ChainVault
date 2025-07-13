@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ShieldCheckIcon,
@@ -9,10 +9,9 @@ import {
   ExclamationTriangleIcon,
   CheckCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useAuth } from '../contexts/AuthContext';
 
-export const SettingsPage: React.FC = () => {
+export const SettingsPage = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [settings, setSettings] = useState({
@@ -225,7 +224,7 @@ export const SettingsPage: React.FC = () => {
               className="btn-primary flex items-center space-x-2 px-6"
             >
               {loading ? (
-                <LoadingSpinner size="sm" />
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
               ) : (
                 <CheckCircleIcon className="h-4 w-4" />
               )}

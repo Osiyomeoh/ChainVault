@@ -1,21 +1,19 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   PlusIcon,
   ShieldCheckIcon,
   ClockIcon,
-  ExclamationTriangleIcon,
   EyeIcon,
 } from '@heroicons/react/24/outline';
-import { useVaults } from '@/contexts/VaultContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
-import { VaultCard } from '@/components/VaultCard';
-import { StatsOverview } from '@/components/StatsOverview';
-import { RecentActivity } from '@/components/RecentActivity';
+import { useVaults } from '../contexts/VaultContext';
+import { useAuth } from '../contexts/AuthContext';
+import { VaultCard } from '../components/VaultCard';
+import { StatsOverview } from '../components/StatsOverview';
+import { RecentActivity } from '../components/RecentActivity';
 
-export const DashboardPage: React.FC = () => {
+export const DashboardPage = () => {
   const { vaults, loading, updateProofOfLife } = useVaults();
   const { user } = useAuth();
   const [updatingVault, setUpdatingVault] = useState<string | null>(null);
@@ -27,7 +25,7 @@ export const DashboardPage: React.FC = () => {
   };
 
   const activeVaults = vaults.filter(v => v.status === 'active');
-  const warningVaults = vaults.filter(v => {
+  const warningVaults = vaults.filter(() => {
     // Add logic to determine if vault needs attention
     return false; // Placeholder
   });
@@ -35,7 +33,7 @@ export const DashboardPage: React.FC = () => {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-96">
-        <LoadingSpinner size="lg" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bitcoin-500"></div>
       </div>
     );
   }

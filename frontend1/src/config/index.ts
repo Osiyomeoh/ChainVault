@@ -1,13 +1,13 @@
 import { StacksMainnet, StacksTestnet } from '@stacks/network';
-import { NetworkConfig } from '@/types';
+import { NetworkConfig } from '../types';
 
 export const networkConfig: NetworkConfig = {
-  stacksNetwork: (import.meta.env.VITE_STACKS_NETWORK as 'mainnet' | 'testnet') || 'testnet',
-  contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
-  contractName: import.meta.env.VITE_CONTRACT_NAME || 'chainvault-inheritance',
-  apiBaseUrl: import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001',
-  stacksApiUrl: import.meta.env.VITE_STACKS_API_URL || 'https://stacks-node-api.testnet.stacks.co',
-  btcApiUrl: import.meta.env.VITE_BTC_API_URL || 'https://mempool.space/testnet/api',
+  stacksNetwork: ((import.meta as any).env?.VITE_STACKS_NETWORK as 'mainnet' | 'testnet') || 'testnet',
+  contractAddress: (import.meta as any).env?.VITE_CONTRACT_ADDRESS || 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM',
+  contractName: (import.meta as any).env?.VITE_CONTRACT_NAME || 'chainvault-inheritance',
+  apiBaseUrl: (import.meta as any).env?.VITE_API_BASE_URL || 'http://localhost:3001',
+  stacksApiUrl: (import.meta as any).env?.VITE_STACKS_API_URL || 'https://stacks-node-api.testnet.stacks.co',
+  btcApiUrl: (import.meta as any).env?.VITE_BTC_API_URL || 'https://mempool.space/testnet/api',
 };
 
 export const getStacksNetwork = () => {

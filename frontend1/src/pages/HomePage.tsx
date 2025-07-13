@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -6,11 +5,10 @@ import {
   EyeSlashIcon,
   LinkIcon,
   ClockIcon,
-  CheckCircleIcon,
   ArrowRightIcon,
 } from '@heroicons/react/24/outline';
-import { useAuth } from '@/contexts/AuthContext';
-import { ConnectWallet } from '@/components/ConnectWallet';
+import { useAuth } from '../contexts/AuthContext';
+import { ConnectWallet } from '../components/ConnectWallet';
 
 const features = [
   {
@@ -42,7 +40,7 @@ const stats = [
   { label: 'Average Setup Time', value: '15min' },
 ];
 
-export const HomePage: React.FC = () => {
+export const HomePage = () => {
   const { isSignedIn } = useAuth();
 
   return (

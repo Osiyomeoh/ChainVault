@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   CurrencyDollarIcon,
@@ -6,15 +6,14 @@ import {
   EyeIcon,
   EyeSlashIcon,
 } from '@heroicons/react/24/outline';
-import { BitcoinBalance } from '@/types';
-import { vaultService } from '@/services/vaultService';
-import { LoadingSpinner } from './LoadingSpinner';
+import { BitcoinBalance } from '../types';
+import { vaultService } from '../services/vaultService';
 
 interface BitcoinBalanceCardProps {
   vaultId: string;
 }
 
-export const BitcoinBalanceCard: React.FC<BitcoinBalanceCardProps> = ({ vaultId }) => {
+export const BitcoinBalanceCard = ({ vaultId }: BitcoinBalanceCardProps) => {
   const [balances, setBalances] = useState<BitcoinBalance[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -43,7 +42,7 @@ export const BitcoinBalanceCard: React.FC<BitcoinBalanceCardProps> = ({ vaultId 
   if (loading) {
     return (
       <div className="card flex items-center justify-center py-8">
-        <LoadingSpinner size="md" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bitcoin-500"></div>
       </div>
     );
   }

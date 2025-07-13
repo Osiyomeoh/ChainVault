@@ -6,10 +6,6 @@ import {
     stringUtf8CV,
     uintCV,
     bufferCV,
-    contractPrincipalCV,
-    standardPrincipalCV,
-    tupleCV,
-    listCV,
     callReadOnlyFunction,
     cvToJSON,
   } from '@stacks/transactions';
@@ -104,7 +100,7 @@ import {
         functionArgs: [
           stringUtf8CV(vaultId),
           uintCV(beneficiaryIndex),
-          standardPrincipalCV(beneficiaryAddress),
+          stringUtf8CV(beneficiaryAddress),
           uintCV(allocationPercentage),
           stringUtf8CV(conditions),
           bufferCV(encryptedMetadata),

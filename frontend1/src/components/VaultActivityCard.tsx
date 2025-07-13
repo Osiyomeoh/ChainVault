@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   ClockIcon,
@@ -11,7 +10,7 @@ interface VaultActivityCardProps {
   vaultId: string;
 }
 
-export const VaultActivityCard: React.FC<VaultActivityCardProps> = ({ vaultId }) => {
+export const VaultActivityCard = ({ vaultId: _vaultId }: VaultActivityCardProps) => {
   // Mock activity data - in real app, this would be fetched from API
   const activities = [
     {

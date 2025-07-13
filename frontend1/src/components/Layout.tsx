@@ -1,13 +1,12 @@
-import React from 'react';
 import { Header } from './Header';
 import { Sidebar } from './Sidebar';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-export const Layout: React.FC<LayoutProps> = ({ children }) => {
+export const Layout = ({ children }: LayoutProps) => {
   const { isSignedIn } = useAuth();
 
   return (

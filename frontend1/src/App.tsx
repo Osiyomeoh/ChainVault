@@ -1,15 +1,14 @@
-import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from '@/contexts/AuthContext';
-import { VaultProvider } from '@/contexts/VaultContext';
-import { Layout } from '@/components/Layout';
-import { HomePage } from '@/pages/HomePage';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { CreateVaultPage } from '@/pages/CreateVaultPage';
-import { VaultDetailsPage } from '@/pages/VaultDetailsPage';
-import { SettingsPage } from '@/pages/SettingsPage';
-import { ProtectedRoute } from '@/components/ProtectedRoute';
+import { AuthProvider } from './contexts/AuthContext';
+import { VaultProvider } from './contexts/VaultContext';
+import { Layout } from './components/Layout';
+import { HomePage } from './pages/HomePage';
+import { DashboardPage } from './pages/DashboardPage';
+import { CreateVaultPage } from './pages/CreateVaultPage';
+import { VaultDetailsPage } from './pages/VaultDetailsPage';
+import { SettingsPage } from './pages/SettingsPage';
+import { ProtectedRoute } from './components/ProtectedRoute';
 
 function App() {
   return (

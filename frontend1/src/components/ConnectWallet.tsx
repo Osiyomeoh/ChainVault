@@ -1,8 +1,7 @@
-import React from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 import { WalletIcon } from '@heroicons/react/24/outline';
 
-export const ConnectWallet: React.FC = () => {
+export const ConnectWallet = () => {
   const { signIn, loading } = useAuth();
 
   return (

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { useForm, Controller } from 'react-hook-form';
@@ -10,11 +10,10 @@ import {
   TrashIcon,
   InformationCircleIcon,
 } from '@heroicons/react/24/outline';
-import { useVaults } from '@/contexts/VaultContext';
-import { useAuth } from '@/contexts/AuthContext';
-import { CreateVaultRequest, PrivacyLevel } from '@/types';
-import { PRIVACY_LEVELS } from '@/config';
-import { LoadingSpinner } from '@/components/LoadingSpinner';
+import { useVaults } from '../contexts/VaultContext';
+import { useAuth } from '../contexts/AuthContext';
+import { CreateVaultRequest, PrivacyLevel } from '../types';
+import { PRIVACY_LEVELS } from '../config';
 import toast from 'react-hot-toast';
 
 const validationSchema = yup.object({
@@ -79,12 +78,11 @@ const privacyLevels = [
   },
 ];
 
-export const CreateVaultPage: React.FC = () => {
+export const CreateVaultPage = () => {
   const navigate = useNavigate();
   const { createVault } = useVaults();
   const { userSession } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [step, setStep] = useState(1);
 
   const {
     control,
@@ -93,11 +91,11 @@ export const CreateVaultPage: React.FC = () => {
     setValue,
     formState: { errors, isValid },
   } = useForm<CreateVaultRequest>({
-    resolver: yupResolver(validationSchema),
+    resolver: yupResolver(validationSchema) as any,
     defaultValues: {
       vaultName: '',
       inheritanceDelay: 4320, // 30 days
-      privacyLevel: PRIVACY_LEVELS.STEALTH,
+      privacyLevel: PRIVACY_LEVELS.STEALTH as PrivacyLevel,
       gracePeriod: 144, // 1 day
       bitcoinAddresses: [''],
       beneficiaries: [
@@ -182,7 +180,7 @@ export const CreateVaultPage: React.FC = () => {
         </p>
       </div>
 
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <form onSubmit={handleSubmit(onSubmit as any)} className="space-y-8">
         {/* Step 1: Basic Information */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -285,7 +283,7 @@ export const CreateVaultPage: React.FC = () => {
           <h2 className="text-xl font-semibold mb-6">3. Bitcoin Addresses</h2>
           
           <div className="space-y-4">
-            {watchedBitcoinAddresses.map((address, index) => (
+            {watchedBitcoinAddresses.map((_, index) => (
               <div key={index} className="flex space-x-3">
                 <Controller
                   name={`bitcoinAddresses.${index}`}
@@ -339,7 +337,7 @@ export const CreateVaultPage: React.FC = () => {
           </div>
           
           <div className="space-y-6">
-            {watchedBeneficiaries.map((beneficiary, index) => (
+            {watchedBeneficiaries.map((_, index) => (
               <div key={index} className="border border-dark-600 rounded-lg p-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="font-medium">Beneficiary #{index + 1}</h3>
@@ -511,7 +509,7 @@ export const CreateVaultPage: React.FC = () => {
           >
             {loading ? (
               <>
-                <LoadingSpinner size="sm" />
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                 <span>Creating Vault...</span>
               </>
             ) : (

@@ -33,7 +33,7 @@ class VaultService {
       });
 
       // Create vault on Stacks blockchain
-      const txId = await stacksService.createVault(
+      await stacksService.createVault(
         vaultData.userSession,
         vaultId,
         vaultData.vaultName,

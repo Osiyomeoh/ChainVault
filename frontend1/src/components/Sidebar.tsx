@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import {
   HomeIcon,
@@ -7,7 +6,7 @@ import {
   DocumentTextIcon,
   ChartBarIcon,
 } from '@heroicons/react/24/outline';
-import { useVaults } from '@/contexts/VaultContext';
+import { useVaults } from '../contexts/VaultContext';
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: HomeIcon },
@@ -17,7 +16,7 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: CogIcon },
 ];
 
-export const Sidebar: React.FC = () => {
+export const Sidebar = () => {
   const location = useLocation();
   const { vaults } = useVaults();
 

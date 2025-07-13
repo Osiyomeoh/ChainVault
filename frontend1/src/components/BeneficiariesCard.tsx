@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   UserGroupIcon,
@@ -6,19 +6,18 @@ import {
   EyeSlashIcon,
   PlusIcon,
 } from '@heroicons/react/24/outline';
-import { Beneficiary, PrivacyLevel } from '@/types';
-import { vaultService } from '@/services/vaultService';
-import { LoadingSpinner } from './LoadingSpinner';
+import { Beneficiary, PrivacyLevel } from '../types';
+import { vaultService } from '../services/vaultService';
 
 interface BeneficiariesCardProps {
   vaultId: string;
   privacyLevel: PrivacyLevel;
 }
 
-export const BeneficiariesCard: React.FC<BeneficiariesCardProps> = ({
+export const BeneficiariesCard = ({
   vaultId,
   privacyLevel,
-}) => {
+}: BeneficiariesCardProps) => {
   const [beneficiaries, setBeneficiaries] = useState<Beneficiary[]>([]);
   const [loading, setLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);
@@ -48,7 +47,7 @@ export const BeneficiariesCard: React.FC<BeneficiariesCardProps> = ({
   if (loading) {
     return (
       <div className="card flex items-center justify-center py-8">
-        <LoadingSpinner size="md" />
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-bitcoin-500"></div>
       </div>
     );
   }

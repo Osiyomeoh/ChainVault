@@ -1,4 +1,3 @@
-import React from 'react';
 import { motion } from 'framer-motion';
 import {
   ClockIcon,
@@ -6,8 +5,7 @@ import {
   ExclamationTriangleIcon,
   CalendarIcon,
 } from '@heroicons/react/24/outline';
-import { Vault, ProofOfLife } from '@/types';
-import { LoadingSpinner } from './LoadingSpinner';
+import { Vault, ProofOfLife } from '../types';
 
 interface ProofOfLifeCardProps {
   vault: Vault;
@@ -16,12 +14,11 @@ interface ProofOfLifeCardProps {
   updating: boolean;
 }
 
-export const ProofOfLifeCard: React.FC<ProofOfLifeCardProps> = ({
+export const ProofOfLifeCard = ({
   vault,
-  proofOfLife,
   onUpdate,
   updating,
-}) => {
+}: ProofOfLifeCardProps) => {
   const daysSinceLastActivity = Math.floor((Date.now() / 1000 - vault.lastActivity) / 86400);
   const inheritanceDelayDays = Math.floor(vault.inheritanceDelay / 144);
   const gracePeriodDays = Math.floor(vault.gracePeriod / 144);
@@ -110,7 +107,7 @@ export const ProofOfLifeCard: React.FC<ProofOfLifeCardProps> = ({
           className="btn-primary flex items-center space-x-2"
         >
           {updating ? (
-            <LoadingSpinner size="sm" />
+            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
           ) : (
             <ClockIcon className="h-4 w-4" />
           )}

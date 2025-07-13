@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
-import { Vault, ProofOfLife, Beneficiary } from '@/types';
-import { vaultService } from '@/services/vaultService';
+import { Vault, ProofOfLife } from '../types';
+import { vaultService } from '../services/vaultService';
 import { useAuth } from './AuthContext';
 import toast from 'react-hot-toast';
 
