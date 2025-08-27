@@ -60,8 +60,8 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
-            contract-name: chainvault-core_clar
+            contract-name: chainvault-core
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
-            path: contracts/chainvault-core.clar
+            path: contracts/chainvault-core-simple.clar
             clarity-version: 3
       epoch: "3.1"
