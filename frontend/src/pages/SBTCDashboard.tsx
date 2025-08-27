@@ -7,6 +7,7 @@ import {
 import { useSBTCVaults } from '../contexts/SBTCVaultContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboard } from '../contexts/DashboardContext';
+import { useLanguage } from '../contexts/LanguageContext';
 import { SBTCVault } from '../types';
 
 // Dashboard Section Components
@@ -35,6 +36,7 @@ const LoadingSpinner = ({ size = 'md', className = '' }: {
 export function SBTCDashboard() {
   const { isSignedIn, user } = useAuth();
   const { activeSection } = useDashboard();
+  const { t } = useLanguage();
   const {
     vaults,
     stats,
@@ -132,20 +134,20 @@ export function SBTCDashboard() {
         {/* Section Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            {activeSection === 'overview' && 'Dashboard Overview'}
-            {activeSection === 'vaults' && 'My Vaults'}
-            {activeSection === 'beneficiaries' && 'Beneficiaries'}
-            {activeSection === 'timeline' && 'Inheritance Timeline'}
-            {activeSection === 'transactions' && 'Transaction History'}
-            {activeSection === 'documents' && 'Documents & Metadata'}
+            {activeSection === 'overview' && t('dashboardOverview')}
+            {activeSection === 'vaults' && t('vaults')}
+            {activeSection === 'beneficiaries' && t('beneficiaries')}
+            {activeSection === 'timeline' && t('timeline')}
+            {activeSection === 'transactions' && t('transactions')}
+            {activeSection === 'documents' && t('documents')}
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
-            {activeSection === 'overview' && 'Monitor your inheritance vaults and overall portfolio'}
-            {activeSection === 'vaults' && 'Manage your sBTC inheritance vaults'}
-            {activeSection === 'beneficiaries' && 'View and manage inheritance recipients'}
-            {activeSection === 'timeline' && 'Track inheritance deadlines and proof of life'}
-            {activeSection === 'transactions' && 'Monitor sBTC movements and distributions'}
-            {activeSection === 'documents' && 'Access vault documents and metadata'}
+            {activeSection === 'overview' && t('monitorVaults')}
+            {activeSection === 'vaults' && t('manageVaults')}
+            {activeSection === 'beneficiaries' && t('viewBeneficiaries')}
+            {activeSection === 'timeline' && t('trackTimeline')}
+            {activeSection === 'transactions' && t('monitorTransactions')}
+            {activeSection === 'documents' && t('accessDocuments')}
           </p>
         </div>
 

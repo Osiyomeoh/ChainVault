@@ -16,6 +16,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useDashboard } from '../contexts/DashboardContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -26,25 +27,26 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose, onOpen }: SidebarProps) {
   const { isSignedIn, user } = useAuth();
   const { activeSection, setActiveSection } = useDashboard();
+  const { t } = useLanguage();
   const location = useLocation();
 
   console.log('Sidebar render:', { isSignedIn, isOpen, location: location.pathname });
 
   const navigation = [
     { 
-      name: 'Dashboard', 
+      name: t('dashboard'), 
       href: '/sbtc-dashboard', 
       icon: HomeIcon,
       section: 'dashboard'
     },
     { 
-      name: 'Create Vault', 
+      name: t('createVault'), 
       href: '/create-vault', 
       icon: PlusIcon,
       section: 'create'
     },
     { 
-      name: 'Settings', 
+      name: t('settings'), 
       href: '/settings', 
       icon: CogIcon,
       section: 'settings'
@@ -53,40 +55,40 @@ export function Sidebar({ isOpen, onClose, onOpen }: SidebarProps) {
 
   const dashboardSections = [
     {
-      name: 'Overview',
+      name: t('overview'),
       icon: ChartBarIcon,
       section: 'overview',
-      description: 'Vault statistics and summary'
+      description: t('monitorVaults')
     },
     {
-      name: 'My Vaults',
+      name: t('vaults'),
       icon: ShieldCheckIcon,
       section: 'vaults',
-      description: 'Manage your inheritance vaults'
+      description: t('manageVaults')
     },
     {
-      name: 'Beneficiaries',
+      name: t('beneficiaries'),
       icon: UserGroupIcon,
       section: 'beneficiaries',
-      description: 'View and manage inheritance recipients'
+      description: t('viewBeneficiaries')
     },
     {
-      name: 'Timeline',
+      name: t('timeline'),
       icon: ClockIcon,
       section: 'timeline',
-      description: 'Inheritance deadlines and proof of life'
+      description: t('trackTimeline')
     },
     {
-      name: 'Transactions',
+      name: t('transactions'),
       icon: CurrencyDollarIcon,
       section: 'transactions',
-      description: 'sBTC deposits, withdrawals, and distributions'
+      description: t('monitorTransactions')
     },
     {
-      name: 'Documents',
+      name: t('documents'),
       icon: DocumentTextIcon,
       section: 'documents',
-      description: 'Legal documents and vault metadata'
+      description: t('accessDocuments')
     }
   ];
 

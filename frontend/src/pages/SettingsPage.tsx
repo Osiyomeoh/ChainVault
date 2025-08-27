@@ -10,13 +10,14 @@ import {
   CogIcon,
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { useLanguage } from '../contexts/LanguageContext';
 
 export function SettingsPage() {
   const { user } = useAuth();
+  const { language, setLanguage: setLanguageContext, t } = useLanguage();
   const [darkMode, setDarkMode] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [autoLock, setAutoLock] = useState(true);
-  const [language, setLanguage] = useState('en');
 
   // Initialize dark mode from localStorage
   useEffect(() => {
@@ -53,7 +54,7 @@ export function SettingsPage() {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Settings</h1>
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{t('settings')}</h1>
           <p className="text-gray-600 dark:text-gray-400 mt-2">
             Manage your account preferences and security settings
           </p>
@@ -70,15 +71,15 @@ export function SettingsPage() {
             >
               <div className="flex items-center mb-4">
                 <SunIcon className="h-6 w-6 text-yellow-500 mr-3" />
-                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Appearance</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">{t('appearance')}</h2>
               </div>
               
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">Dark Mode</h3>
+                    <h3 className="text-sm font-medium text-gray-900 dark:text-white">{t('darkMode')}</h3>
                     <p className="text-sm text-gray-500 dark:text-gray-400">
-                      Switch between light and dark themes
+                      {t('switchThemes')}
                     </p>
                   </div>
                   <button
@@ -189,7 +190,7 @@ export function SettingsPage() {
                   <select
                     id="language"
                     value={language}
-                    onChange={(e) => setLanguage(e.target.value)}
+                    onChange={(e) => setLanguageContext(e.target.value as 'en' | 'es' | 'fr' | 'de' | 'zh')}
                     className="block w-full px-3 py-2 border border-gray-300 dark:border-dark-600 rounded-md shadow-sm focus:outline-none focus:ring-bitcoin-500 focus:border-bitcoin-500 dark:bg-dark-700 dark:text-white"
                   >
                     <option value="en">English</option>

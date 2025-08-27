@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast';
 // Context Providers
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardProvider } from './contexts/DashboardContext';
+import { LanguageProvider } from './contexts/LanguageContext';
 import { SBTCVaultProvider } from './contexts/SBTCVaultContext';
 
 // Layout Components
@@ -48,102 +49,104 @@ function App() {
   return (
     <AuthProvider>
       <DashboardProvider>
-        <SBTCVaultProvider>
-          <Router>
-            <div className="App">
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<LandingPage />} />
-                <Route path="/launch-app" element={<LaunchAppPage />} />
+        <LanguageProvider>
+          <SBTCVaultProvider>
+            <Router>
+              <div className="App">
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<LandingPage />} />
+                  <Route path="/launch-app" element={<LaunchAppPage />} />
+                  
+                  {/* Protected Routes - Require Wallet Connection */}
+                  <Route 
+                    path="/dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <Navigate to="/sbtc-dashboard" replace />
+                        </Layout>
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/sbtc-dashboard" 
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <SBTCDashboard />
+                        </Layout>
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/create-vault" 
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <CreateVaultPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/vault/:vaultId" 
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <VaultDetailsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  <Route 
+                    path="/settings" 
+                    element={
+                      <ProtectedRoute>
+                        <Layout>
+                          <SettingsPage />
+                        </Layout>
+                      </ProtectedRoute>
+                    } 
+                  />
+                  
+                  {/* Fallback Routes */}
+                  <Route path="*" element={<Navigate to="/" replace />} />
+                </Routes>
                 
-                {/* Protected Routes - Require Wallet Connection */}
-                <Route 
-                  path="/dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <Navigate to="/sbtc-dashboard" replace />
-                      </Layout>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                <Route 
-                  path="/sbtc-dashboard" 
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <SBTCDashboard />
-                      </Layout>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                <Route 
-                  path="/create-vault" 
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <CreateVaultPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                <Route 
-                  path="/vault/:vaultId" 
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <VaultDetailsPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                <Route 
-                  path="/settings" 
-                  element={
-                    <ProtectedRoute>
-                      <Layout>
-                        <SettingsPage />
-                      </Layout>
-                    </ProtectedRoute>
-                  } 
-                />
-                
-                {/* Fallback Routes */}
-                <Route path="*" element={<Navigate to="/" replace />} />
-              </Routes>
-              
-              {/* Global Toast Notifications */}
-              <Toaster
-                position="top-right"
-                toastOptions={{
-                  duration: 4000,
-                  style: {
-                    background: '#363636',
-                    color: '#fff',
-                  },
-                  success: {
-                    duration: 3000,
-                    iconTheme: {
-                      primary: '#10b981',
-                      secondary: '#fff',
+                {/* Global Toast Notifications */}
+                <Toaster
+                  position="top-right"
+                  toastOptions={{
+                    duration: 4000,
+                    style: {
+                      background: '#363636',
+                      color: '#fff',
                     },
-                  },
-                  error: {
-                    duration: 5000,
-                    iconTheme: {
-                      primary: '#ef4444',
-                      secondary: '#fff',
+                    success: {
+                      duration: 3000,
+                      iconTheme: {
+                        primary: '#10b981',
+                        secondary: '#fff',
+                      },
                     },
-                  },
-                }}
-              />
-            </div>
-          </Router>
-        </SBTCVaultProvider>
+                    error: {
+                      duration: 5000,
+                      iconTheme: {
+                        primary: '#ef4444',
+                        secondary: '#fff',
+                      },
+                    },
+                  }}
+                />
+              </div>
+            </Router>
+          </SBTCVaultProvider>
+        </LanguageProvider>
       </DashboardProvider>
     </AuthProvider>
   );
