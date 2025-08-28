@@ -3,7 +3,8 @@ import { showConnect, UserSession, AppConfig } from '@stacks/connect';
 import { STACKS_MAINNET, STACKS_TESTNET } from '@stacks/network';
 
 interface User {
-  stacksAddress: string;
+  id: string;
+  address: string;
   appPrivateKey: string;
   profile?: any;
 }
@@ -15,11 +16,13 @@ interface AuthContextType {
   signIn: () => void;
   signOut: () => void;
   loading: boolean;
+  isAuthenticated: boolean;
+  isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const appConfig = new AppConfig(['store_write', 'publish_data']);
+  const appConfig = new AppConfig(['store_write', 'publish_data', 'contract_write']);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [userSession] = useState(new UserSession({ appConfig }));
@@ -63,8 +66,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                              userData.profile?.stxAddress?.mainnet || 
                              userData.profile?.stxAddress || '';
         
-        const userInfo = {
-          stacksAddress,
+        const userInfo: User = {
+          id: stacksAddress,
+          address: stacksAddress,
           appPrivateKey: userData.appPrivateKey || '',
           profile: userData.profile
         };
@@ -99,29 +103,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           updateAuthState();
         }, 100);
       },
-      onCancel: (error) => {
-        console.log('Sign in cancelled:', error);
-        setLoading(false);
+      onCancel: () => {
+        console.log('Sign in cancelled');
       },
-      userSession,
     });
   };
 
   const signOut = () => {
+    console.log('Signing out...');
     userSession.signUserOut();
     setIsSignedIn(false);
     setUser(null);
   };
 
+  const contextValue: AuthContextType = {
+    isSignedIn,
+    user,
+    userSession,
+    signIn,
+    signOut,
+    loading,
+    isAuthenticated: isSignedIn,
+    isLoading: loading
+  };
+
   return (
-    <AuthContext.Provider value={{
-      isSignedIn,
-      user,
-      userSession,
-      signIn,
-      signOut,
-      loading
-    }}>
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   );

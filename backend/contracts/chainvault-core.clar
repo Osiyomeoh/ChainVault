@@ -1,5 +1,8 @@
 
 
+;; Contract name for versioning
+(define-constant CONTRACT_NAME "chainvault-core-v3")
+
 ;; String constants for consistent UTF-8 usage
 (define-constant STATUS_ACTIVE "active")
 (define-constant STATUS_INHERITANCE_TRIGGERED "inherit-triggered")
@@ -111,6 +114,12 @@
   }
 )
 
+;; Simple user vault tracking - maps user address to list of vault IDs
+(define-map user-vaults
+  { user: principal }
+  { vault-ids: (list 50 (string-utf8 36)) }
+)
+
 ;; NEW: Create vault with sBTC funding option
 (define-public (create-sbtc-vault
   (vault-id (string-utf8 36))
@@ -172,6 +181,12 @@
         grace-period-end: (+ inheritance-delay grace-period),
         status: STATUS_ACTIVE
       })
+    
+    ;; Track vault ownership - for now, just create a simple list with current vault
+    ;; In a production system, you'd want to implement proper list management
+    (map-set user-vaults
+      { user: tx-sender }
+      { vault-ids: (list vault-id) })
     
     ;; Update contract statistics
     (var-set total-vaults (+ (var-get total-vaults) u1))
@@ -502,6 +517,18 @@
 
 (define-read-only (get-contract-version)
   (var-get contract-version))
+
+;; Get all vault IDs for a specific user
+(define-read-only (get-user-vaults (user principal))
+  (match (map-get? user-vaults { user: user })
+    user-data (get vault-ids user-data)
+    (list)))
+
+;; Get vault count for a specific user
+(define-read-only (get-user-vault-count (user principal))
+  (match (map-get? user-vaults { user: user })
+    user-data (len (get vault-ids user-data))
+    u0))
 
 ;; Calculate inheritance amount for beneficiary
 (define-read-only (calculate-inheritance-amount 

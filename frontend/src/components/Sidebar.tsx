@@ -212,12 +212,12 @@ export function Sidebar({ isOpen, onClose, onOpen }: SidebarProps) {
             <div className="flex items-center space-x-3">
               <div className="w-8 h-8 bg-bitcoin-600 rounded-full flex items-center justify-center">
                 <span className="text-white text-sm font-medium">
-                  {user?.stacksAddress ? user.stacksAddress.slice(2, 4).toUpperCase() : 'U'}
+                  {user?.address ? user.address.slice(2, 4).toUpperCase() : 'U'}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 dark:text-white truncate">
-                  {user?.stacksAddress ? `${user.stacksAddress.slice(0, 6)}...${user.stacksAddress.slice(-4)}` : 'User'}
+                  {user?.address ? `${user.address.slice(0, 6)}...${user.address.slice(-4)}` : 'User'}
                 </p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">Connected</p>
               </div>

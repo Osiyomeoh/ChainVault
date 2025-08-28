@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { SBTCVault, SBTCVaultStats, SBTCTransaction, CreateSBTCVaultData } from '../types/sbtc';
+import { 
+  SBTCVault, 
+  SBTCVaultStats, 
+  SBTCTransaction, 
+  CreateSBTCVaultData,
+  CreateBeneficiaryData
+} from '../types/index';
 import { useAuth } from './AuthContext';
-import { sbtcVaultService } from '../services/sbtcVaultService';
+import { sbtcStacksService } from '../services/sbtcStacksService';
+
 import { toast } from 'react-hot-toast';
 
 interface SBTCVaultContextType {
@@ -13,6 +20,7 @@ interface SBTCVaultContextType {
   
   // Vault Management
   createVault: (vaultData: CreateSBTCVaultData) => Promise<string>;
+  addBeneficiary: (vaultId: string, beneficiaryData: CreateBeneficiaryData) => Promise<string>;
   updateProofOfLife: (vaultId: string) => Promise<void>;
   triggerInheritance: (vaultId: string) => Promise<void>;
   
@@ -20,6 +28,11 @@ interface SBTCVaultContextType {
   depositSBTC: (vaultId: string, amount: number) => Promise<string>;
   withdrawSBTC: (vaultId: string, amount: number) => Promise<string>;
   claimInheritance: (vaultId: string, beneficiaryIndex: number) => Promise<string>;
+  
+  // Contract Read Functions
+  getVaultSBTCBalance: (vaultId: string) => Promise<number>;
+  getVaultInheritanceReadiness: (vaultId: string) => Promise<boolean>;
+  calculateInheritanceAmount: (vaultId: string, beneficiaryIndex: number) => Promise<any>;
   
   // UI State
   setSelectedVault: (vault: SBTCVault | null) => void;
@@ -43,19 +56,72 @@ export function SBTCVaultProvider({ children }: { children: ReactNode }) {
   const [selectedVault, setSelectedVault] = useState<SBTCVault | null>(null);
 
   const refreshVaults = async () => {
-    if (!isSignedIn || !user?.stacksAddress) return;
+    if (!isSignedIn || !user?.address) return;
     
     setLoading(true);
     try {
-      console.log('SBTCVaultContext: Refreshing vaults for', user.stacksAddress);
+      console.log('SBTCVaultContext: Refreshing vaults for', user.address);
       
-      const userVaults = await sbtcVaultService.getUserVaults(user.stacksAddress);
-      const vaultStats = await sbtcVaultService.getVaultStats(user.stacksAddress);
-      const userTransactions = await sbtcVaultService.getTransactions(user.stacksAddress);
+      // Call the actual blockchain service to get user vaults
+      const userVaults = await sbtcStacksService.getUserVaults(user.address);
+      console.log('SBTCVaultContext: Got vaults from service:', userVaults);
       
-      console.log('SBTCVaultContext: Got vaults:', userVaults.length);
+      // Convert the service response to SBTCVault format
+      console.log('🔍 DEBUG: Raw vault data from service:', userVaults);
       
-      setVaults(userVaults);
+      const formattedVaults: SBTCVault[] = userVaults.map((vault: any) => {
+        const formattedVault = {
+          id: vault.vaultId || vault.id || 'unknown',
+          name: vault.name || 'Unnamed Vault',
+          owner: vault.owner || user.address,
+          status: vault.status || 'active',
+          sbtcBalance: vault.sbtcBalance || 0,
+          beneficiaries: vault.beneficiaries || [],
+          inheritanceDelay: vault.inheritanceDelay || 0,
+          privacyLevel: vault.privacyLevel || 1,
+          gracePeriod: vault.gracePeriod || 30,
+          autoDistribute: vault.autoDistribute || true,
+          minimumInheritance: vault.minimumInheritance || 0,
+          createdAt: new Date(vault.createdAt || Date.now()),
+          lastActivity: new Date(vault.lastActivity || Date.now()),
+          // Add missing required properties
+          sbtcLocked: vault.sbtcLocked || false,
+          totalFunds: vault.totalFunds || vault.sbtcBalance || 0,
+          proofOfLife: vault.proofOfLife || {
+            lastCheckin: new Date(),
+            nextDeadline: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000),
+            reminderCount: 0,
+            gracePeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+            status: 'active'
+          }
+        };
+        
+        console.log('🔍 DEBUG: Formatted vault:', { 
+          original: vault, 
+          formatted: formattedVault,
+          id: formattedVault.id,
+          vaultId: vault.vaultId 
+        });
+        
+        return formattedVault;
+      });
+      
+      console.log('SBTCVaultContext: Formatted vaults:', formattedVaults);
+      
+      // Calculate stats from the vaults
+      const vaultStats: SBTCVaultStats = {
+        totalVaults: formattedVaults.length,
+        totalSbtcLocked: formattedVaults.reduce((sum, vault) => sum + vault.sbtcBalance, 0),
+        totalSbtcValue: formattedVaults.reduce((sum, vault) => sum + vault.sbtcBalance, 0) * 0.000001, // Convert to STX
+        activeVaults: formattedVaults.filter(vault => vault.status === 'active').length,
+        nearDeadlineVaults: 0 // TODO: Calculate based on grace period
+      };
+      
+      const userTransactions: SBTCTransaction[] = []; // TODO: Implement transaction fetching
+      
+      console.log('SBTCVaultContext: Setting vaults and stats:', { vaults: formattedVaults.length, stats: vaultStats });
+      
+      setVaults(formattedVaults);
       setStats(vaultStats);
       setTransactions(userTransactions);
     } catch (error) {
@@ -67,93 +133,66 @@ export function SBTCVaultProvider({ children }: { children: ReactNode }) {
   };
 
   const createVault = async (vaultData: CreateSBTCVaultData): Promise<string> => {
-    if (!user?.stacksAddress) throw new Error('User not authenticated');
+    if (!user?.address) throw new Error('User not authenticated');
     
-    try {
-      console.log('SBTCVaultContext: Creating vault', vaultData);
-      const vaultId = await sbtcVaultService.createVault(user.stacksAddress, vaultData);
-      toast.success('Vault created successfully');
-      await refreshVaults();
-      return vaultId;
-    } catch (error) {
-      console.error('Failed to create vault:', error);
-      toast.error('Failed to create vault');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('createVault method is deprecated. Use the blockchain service directly from components.');
+  };
+
+  const addBeneficiary = async (vaultId: string, beneficiaryData: CreateBeneficiaryData): Promise<string> => {
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('addBeneficiary method is deprecated. Use the blockchain service directly from components.');
   };
 
   const updateProofOfLife = async (vaultId: string): Promise<void> => {
-    try {
-      console.log('SBTCVaultContext: Updating proof of life for', vaultId);
-      await sbtcVaultService.updateProofOfLife(vaultId);
-      toast.success('Proof of life updated');
-      await refreshVaults();
-    } catch (error) {
-      console.error('Failed to update proof of life:', error);
-      toast.error('Failed to update proof of life');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('updateProofOfLife method is deprecated. Use the blockchain service directly from components.');
   };
 
   const triggerInheritance = async (vaultId: string): Promise<void> => {
-    try {
-      console.log('SBTCVaultContext: Triggering inheritance for', vaultId);
-      await sbtcVaultService.triggerInheritance(vaultId);
-      toast.success('Inheritance triggered');
-      await refreshVaults();
-    } catch (error) {
-      console.error('Failed to trigger inheritance:', error);
-      toast.error('Failed to trigger inheritance');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('triggerInheritance method is deprecated. Use the blockchain service directly from components.');
   };
 
   const depositSBTC = async (vaultId: string, amount: number): Promise<string> => {
-    try {
-      console.log('SBTCVaultContext: Depositing sBTC', { vaultId, amount });
-      const txId = await sbtcVaultService.depositSBTC(vaultId, amount);
-      toast.success('sBTC deposit initiated');
-      await refreshVaults();
-      return txId;
-    } catch (error) {
-      console.error('Failed to deposit sBTC:', error);
-      toast.error('Failed to deposit sBTC');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('depositSBTC method is deprecated. Use the blockchain service directly from components.');
   };
 
   const withdrawSBTC = async (vaultId: string, amount: number): Promise<string> => {
-    try {
-      console.log('SBTCVaultContext: Withdrawing sBTC', { vaultId, amount });
-      const txId = await sbtcVaultService.withdrawSBTC(vaultId, amount);
-      toast.success('sBTC withdrawal initiated');
-      await refreshVaults();
-      return txId;
-    } catch (error) {
-      console.error('Failed to withdraw sBTC:', error);
-      toast.error('Failed to withdraw sBTC');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('withdrawSBTC method is deprecated. Use the blockchain service directly from components.');
   };
 
   const claimInheritance = async (vaultId: string, beneficiaryIndex: number): Promise<string> => {
-    try {
-      console.log('SBTCVaultContext: Claiming inheritance', { vaultId, beneficiaryIndex });
-      const txId = await sbtcVaultService.claimInheritance(vaultId, beneficiaryIndex);
-      toast.success('Inheritance claim initiated');
-      await refreshVaults();
-      return txId;
-    } catch (error) {
-      console.error('Failed to claim inheritance:', error);
-      toast.error('Failed to claim inheritance');
-      throw error;
-    }
+    // TODO: This method is deprecated - use blockchain service directly
+    throw new Error('claimInheritance method is deprecated. Use the blockchain service directly from components.');
+  };
+
+  // Contract read functions
+  const getVaultSBTCBalance = async (vaultId: string): Promise<number> => {
+    // TODO: This method is deprecated - use blockchain service directly
+    return 0;
+  };
+
+  const getVaultInheritanceReadiness = async (vaultId: string): Promise<boolean> => {
+    // TODO: This method is deprecated - use blockchain service directly
+    return false;
+  };
+
+  const calculateInheritanceAmount = async (vaultId: string, beneficiaryIndex: number): Promise<any> => {
+    // TODO: This method is deprecated - use blockchain service directly
+    return {
+      grossAmount: 0,
+      feeAmount: 0,
+      netAmount: 0
+    };
   };
 
   useEffect(() => {
-    console.log('SBTCVaultContext: Auth state changed', { isSignedIn, userAddress: user?.stacksAddress });
+    console.log('SBTCVaultContext: Auth state changed', { isSignedIn, userAddress: user?.address });
     
-    if (isSignedIn && user?.stacksAddress) {
+    if (isSignedIn && user?.address) {
       refreshVaults();
     } else {
       // Clear data when user signs out
@@ -168,7 +207,7 @@ export function SBTCVaultProvider({ children }: { children: ReactNode }) {
       setTransactions([]);
       setSelectedVault(null);
     }
-  }, [isSignedIn, user?.stacksAddress]);
+  }, [isSignedIn, user?.address]);
 
   const contextValue = {
     vaults,
@@ -177,11 +216,15 @@ export function SBTCVaultProvider({ children }: { children: ReactNode }) {
     loading,
     selectedVault,
     createVault,
+    addBeneficiary,
     updateProofOfLife,
     triggerInheritance,
     depositSBTC,
     withdrawSBTC,
     claimInheritance,
+    getVaultSBTCBalance,
+    getVaultInheritanceReadiness,
+    calculateInheritanceAmount,
     setSelectedVault,
     refreshVaults
   };
@@ -190,7 +233,7 @@ export function SBTCVaultProvider({ children }: { children: ReactNode }) {
     vaultsLength: vaults.length, 
     loading, 
     isSignedIn, 
-    userAddress: user?.stacksAddress 
+    userAddress: user?.address 
   });
 
   return (

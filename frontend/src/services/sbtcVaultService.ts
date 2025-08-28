@@ -1,85 +1,25 @@
-import { SBTCVault, SBTCVaultStats, SBTCTransaction, CreateSBTCVaultData, SBTCBeneficiary } from '../types/sbtc';
-import { sbtcStacksService } from './sbtcStacksService';
-import { apiService } from './apiService';
+import { 
+  SBTCVault, 
+  SBTCVaultStats, 
+  SBTCTransaction, 
+  CreateSBTCVaultData,
+  CreateBeneficiaryData,
+  VaultStatus,
+  ProofOfLifeStatus,
+  TransactionType,
+  TransactionStatus
+} from '../types/index';
+
 
 class SBTCVaultService {
   async getUserVaults(userAddress: string): Promise<SBTCVault[]> {
     try {
       console.log('Getting vaults for user:', userAddress);
       
-      // For now, return mock data while backend is being built
-      const mockVaults: SBTCVault[] = [
-        {
-          id: 'sbtc-vault-1',
-          vaultName: 'Family sBTC Legacy',
-          owner: userAddress,
-          inheritanceDelay: 144 * 365, // 1 year in blocks
-          lastActivity: Math.floor(Date.now() / 1000) - 86400, // 1 day ago
-          status: 'active',
-          sbtcBalance: 50000000, // 0.5 sBTC in satoshis
-          sbtcLocked: false,
-          minimumInheritance: 10000000, // 0.1 sBTC
-          autoDistribute: true,
-          privacyLevel: 2,
-          gracePeriod: 144 * 7, // 1 week
-          beneficiaries: [
-            {
-              id: 'ben-1',
-              address: 'SP2J6ZY48GV1EZ5V2V5RB9MP66SW86PYKKNRV9EJ7',
-              allocationPercentage: 60,
-              minimumSbtcAmount: 5000000,
-              sbtcClaimed: false,
-              claimDeadline: 0,
-              relationshipToOwner: 'Spouse',
-              contactInfo: 'spouse@email.com'
-            },
-            {
-              id: 'ben-2', 
-              address: 'SP3FBR2AGK5H9QBDH3EEN6DF8EK8JY7RX8QJ5SVTE',
-              allocationPercentage: 40,
-              minimumSbtcAmount: 3000000,
-              sbtcClaimed: false,
-              claimDeadline: 0,
-              relationshipToOwner: 'Child',
-              contactInfo: 'child@email.com'
-            }
-          ],
-          createdAt: Math.floor(Date.now() / 1000) - 86400 * 30,
-          updatedAt: Math.floor(Date.now() / 1000) - 86400
-        },
-        {
-          id: 'sbtc-vault-2',
-          vaultName: 'Emergency sBTC Fund',
-          owner: userAddress,
-          inheritanceDelay: 144 * 30, // 30 days
-          lastActivity: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
-          status: 'active',
-          sbtcBalance: 25000000, // 0.25 sBTC
-          sbtcLocked: true,
-          minimumInheritance: 5000000, // 0.05 sBTC
-          autoDistribute: false,
-          privacyLevel: 4, // Transparent
-          gracePeriod: 144 * 3, // 3 days
-          beneficiaries: [
-            {
-              id: 'ben-3',
-              address: 'SP1K1A1PMGW2BU1WMA7SEQSFSW9WXHK4KK1H1FR5M',
-              allocationPercentage: 100,
-              minimumSbtcAmount: 25000000,
-              sbtcClaimed: false,
-              claimDeadline: 0,
-              relationshipToOwner: 'Trust',
-              contactInfo: 'trust@family.com'
-            }
-          ],
-          createdAt: Math.floor(Date.now() / 1000) - 86400 * 7,
-          updatedAt: Math.floor(Date.now() / 1000) - 3600
-        }
-      ];
-
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      return mockVaults;
+      // TODO: Replace with actual blockchain calls to get user vaults
+      // For now, return empty array to test blockchain integration
+      console.log('Note: getUserVaults needs contract integration to fetch real vaults');
+      return [];
 
     } catch (error) {
       console.error('Failed to get user vaults:', error);
@@ -95,11 +35,10 @@ class SBTCVaultService {
         totalVaults: vaults.length,
         totalSbtcLocked: vaults.reduce((sum, vault) => sum + vault.sbtcBalance, 0),
         totalSbtcValue: vaults.reduce((sum, vault) => sum + vault.sbtcBalance, 0) * 45000 / 100000000, // Convert to USD
-        activeVaults: vaults.filter(v => v.status === 'active').length,
+        activeVaults: vaults.filter(v => v.status === VaultStatus.ACTIVE).length,
         nearDeadlineVaults: vaults.filter(v => {
-          const daysSinceLastActivity = Math.floor((Date.now() / 1000 - v.lastActivity) / 86400);
-          const inheritanceDelayDays = Math.floor(v.inheritanceDelay / 144);
-          return daysSinceLastActivity > inheritanceDelayDays * 0.8;
+          const daysSinceLastActivity = Math.floor((Date.now() - v.lastActivity.getTime()) / 86400);
+          return daysSinceLastActivity >= v.inheritanceDelay - 7; // Within 7 days of deadline
         }).length
       };
 
@@ -118,37 +57,34 @@ class SBTCVaultService {
 
   async getTransactions(userAddress: string): Promise<SBTCTransaction[]> {
     try {
-      // Mock transaction data
+      // TODO: Replace with actual contract calls to get transaction history
       const mockTransactions: SBTCTransaction[] = [
         {
           id: 'tx-1',
           vaultId: 'sbtc-vault-1',
-          type: 'deposit',
+          type: TransactionType.DEPOSIT,
           amount: 50000000,
-          txId: '0x123...abc',
-          status: 'confirmed',
-          timestamp: Math.floor(Date.now() / 1000) - 86400 * 30
+          from: userAddress,
+          to: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.chainvault-core_clar',
+          status: TransactionStatus.CONFIRMED,
+          timestamp: new Date(Date.now() - 86400 * 30 * 1000),
+          blockHeight: 12345,
+          txHash: '0x1234567890abcdef...'
         },
         {
           id: 'tx-2',
           vaultId: 'sbtc-vault-2',
-          type: 'deposit', 
+          type: TransactionType.DEPOSIT,
           amount: 25000000,
-          txId: '0x456...def',
-          status: 'confirmed',
-          timestamp: Math.floor(Date.now() / 1000) - 86400 * 7
-        },
-        {
-          id: 'tx-3',
-          vaultId: 'sbtc-vault-1',
-          type: 'proof-of-life',
-          txId: '0x789...ghi',
-          status: 'confirmed',
-          timestamp: Math.floor(Date.now() / 1000) - 86400
+          from: userAddress,
+          to: 'ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM.chainvault-core_clar',
+          status: TransactionStatus.CONFIRMED,
+          timestamp: new Date(Date.now() - 86400 * 7 * 1000),
+          blockHeight: 12350,
+          txHash: '0xabcdef1234567890...'
         }
       ];
 
-      await new Promise(resolve => setTimeout(resolve, 300));
       return mockTransactions;
     } catch (error) {
       console.error('Failed to get transactions:', error);
@@ -158,35 +94,78 @@ class SBTCVaultService {
 
   async createVault(userAddress: string, vaultData: CreateSBTCVaultData): Promise<string> {
     try {
-      console.log('Creating sBTC vault:', vaultData);
+      console.log('Creating vault with data:', vaultData);
       
-      // Generate unique vault ID
-      const vaultId = `sbtc-vault-${Date.now()}`;
-      
-      // In production, call smart contract
-      // const txId = await sbtcStacksService.createSBTCVault(...);
-      
-      // Mock success
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      return vaultId;
+      // TODO: This needs to be integrated with UserSession from the UI
+      // For now, we'll need to pass UserSession from the component
+      throw new Error('createVault needs UserSession integration - use sbtcStacksService directly from the component');
     } catch (error) {
       console.error('Failed to create vault:', error);
-      throw new Error('Failed to create sBTC vault');
+      throw new Error('Failed to create vault');
+    }
+  }
+
+  async addBeneficiary(vaultId: string, beneficiaryData: CreateBeneficiaryData): Promise<string> {
+    try {
+      console.log('Adding beneficiary to vault:', { vaultId, beneficiaryData });
+      
+      // TODO: Integrate with actual Stacks service
+      const beneficiaryId = `ben-${Date.now()}`;
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('Beneficiary added with ID:', beneficiaryId);
+      return beneficiaryId;
+    } catch (error) {
+      console.error('Failed to add beneficiary:', error);
+      throw new Error('Failed to add beneficiary');
+    }
+  }
+
+  async updateProofOfLife(vaultId: string): Promise<void> {
+    try {
+      console.log('Updating proof of life for vault:', vaultId);
+      
+      // TODO: Integrate with actual Stacks service
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      console.log('Proof of life updated for vault:', vaultId);
+    } catch (error) {
+      console.error('Failed to update proof of life:', error);
+      throw new Error('Failed to update proof of life');
+    }
+  }
+
+  async triggerInheritance(vaultId: string): Promise<void> {
+    try {
+      console.log('Triggering inheritance for vault:', vaultId);
+      
+      // TODO: Integrate with actual Stacks service
+      
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      console.log('Inheritance triggered for vault:', vaultId);
+    } catch (error) {
+      console.error('Failed to trigger inheritance:', error);
+      throw new Error('Failed to trigger inheritance');
     }
   }
 
   async depositSBTC(vaultId: string, amount: number): Promise<string> {
     try {
-      console.log(`Depositing ${amount} satoshis to vault ${vaultId}`);
+      console.log('Depositing sBTC to vault:', { vaultId, amount });
       
-      // In production, call smart contract
-      // const txId = await sbtcStacksService.depositSBTC(vaultId, amount);
+      // TODO: Integrate with actual Stacks service
+      const txId = `tx-${Date.now()}`;
       
-      // Mock transaction ID
-      const txId = `0x${Math.random().toString(16).slice(2)}`;
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('sBTC deposit initiated, transaction ID:', txId);
       return txId;
     } catch (error) {
       console.error('Failed to deposit sBTC:', error);
@@ -196,15 +175,15 @@ class SBTCVaultService {
 
   async withdrawSBTC(vaultId: string, amount: number): Promise<string> {
     try {
-      console.log(`Withdrawing ${amount} satoshis from vault ${vaultId}`);
+      console.log('Withdrawing sBTC from vault:', { vaultId, amount });
       
-      // In production, call smart contract
-      // const txId = await sbtcStacksService.withdrawSBTC(vaultId, amount);
+      // TODO: Integrate with actual Stacks service
+      const txId = `tx-${Date.now()}`;
       
-      // Mock transaction ID
-      const txId = `0x${Math.random().toString(16).slice(2)}`;
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('sBTC withdrawal initiated, transaction ID:', txId);
       return txId;
     } catch (error) {
       console.error('Failed to withdraw sBTC:', error);
@@ -212,47 +191,17 @@ class SBTCVaultService {
     }
   }
 
-  async updateProofOfLife(vaultId: string): Promise<void> {
-    try {
-      console.log(`Updating proof of life for vault ${vaultId}`);
-      
-      // In production, call smart contract
-      // await sbtcStacksService.updateProofOfLife(vaultId);
-      
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-    } catch (error) {
-      console.error('Failed to update proof of life:', error);
-      throw new Error('Failed to update proof of life');
-    }
-  }
-
-  async triggerInheritance(vaultId: string): Promise<void> {
-    try {
-      console.log(`Triggering inheritance for vault ${vaultId}`);
-      
-      // In production, call smart contract
-      // await sbtcStacksService.triggerInheritance(vaultId);
-      
-      // Mock delay
-      await new Promise(resolve => setTimeout(resolve, 3000));
-    } catch (error) {
-      console.error('Failed to trigger inheritance:', error);
-      throw new Error('Failed to trigger inheritance');
-    }
-  }
-
   async claimInheritance(vaultId: string, beneficiaryIndex: number): Promise<string> {
     try {
-      console.log(`Claiming inheritance from vault ${vaultId}, beneficiary ${beneficiaryIndex}`);
+      console.log('Claiming inheritance:', { vaultId, beneficiaryIndex });
       
-      // In production, call smart contract
-      // const txId = await sbtcStacksService.claimInheritance(vaultId, beneficiaryIndex);
+      // TODO: Integrate with actual Stacks service
+      const txId = `tx-${Date.now()}`;
       
-      // Mock transaction ID
-      const txId = `0x${Math.random().toString(16).slice(2)}`;
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      // Simulate API delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
       
+      console.log('Inheritance claim initiated, transaction ID:', txId);
       return txId;
     } catch (error) {
       console.error('Failed to claim inheritance:', error);
@@ -260,38 +209,24 @@ class SBTCVaultService {
     }
   }
 
-  // Utility functions
-  satoshisToSBTC(satoshis: number): number {
-    return satoshis / 100000000;
+  // Contract read functions
+  async getVaultSBTCBalance(vaultId: string): Promise<number> {
+    // TODO: This method is deprecated - use blockchain service directly
+    return 0;
   }
 
-  sbtcToSatoshis(sbtc: number): number {
-    return Math.floor(sbtc * 100000000);
+  async getVaultInheritanceReadiness(vaultId: string): Promise<boolean> {
+    // TODO: This method is deprecated - use blockchain service directly
+    return false;
   }
 
-  formatSBTC(satoshis: number): string {
-    const sbtc = this.satoshisToSBTC(satoshis);
-    return `${sbtc.toFixed(8)} sBTC`;
-  }
-
-  calculateInheritanceDeadline(vault: SBTCVault): number {
-    return vault.lastActivity + (vault.inheritanceDelay * 600); // 10 minutes per block
-  }
-
-  isNearDeadline(vault: SBTCVault): boolean {
-    const deadline = this.calculateInheritanceDeadline(vault);
-    const now = Math.floor(Date.now() / 1000);
-    const timeUntilDeadline = deadline - now;
-    const warningThreshold = vault.inheritanceDelay * 600 * 0.2; // 20% of total time
-    
-    return timeUntilDeadline <= warningThreshold && timeUntilDeadline > 0;
-  }
-
-  isPastDeadline(vault: SBTCVault): boolean {
-    const deadline = this.calculateInheritanceDeadline(vault);
-    const now = Math.floor(Date.now() / 1000);
-    
-    return now > deadline;
+  async calculateInheritanceAmount(vaultId: string, beneficiaryIndex: number): Promise<any> {
+    // TODO: This method is deprecated - use blockchain service directly
+    return {
+      grossAmount: 0,
+      feeAmount: 0,
+      netAmount: 0
+    };
   }
 }
 

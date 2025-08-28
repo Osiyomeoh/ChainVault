@@ -15,24 +15,32 @@ import {
 } from '@heroicons/react/24/outline';
 import { useSBTCVaults } from '../contexts/SBTCVaultContext';
 import { SBTCDepositModal } from '../components/SBTCDepositModal';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { SBTCTransaction, SBTCVault } from '../types';
 
 export function VaultDetailsPage() {
   const { vaultId } = useParams<{ vaultId: string }>();
   const navigate = useNavigate();
   const { vaults, updateProofOfLife, triggerInheritance, depositSBTC, withdrawSBTC } = useSBTCVaults();
+  const { darkMode } = useDarkMode();
   const [showDepositModal, setShowDepositModal] = useState(false);
   const [updatingProof, setUpdatingProof] = useState(false);
   const [triggeringInheritance, setTriggeringInheritance] = useState(false);
 
-  const vault = vaults.find(v => v.id === vaultId);
+  console.log('🔍 DEBUG: VaultDetailsPage - vaultId from params:', vaultId);
+  console.log('🔍 DEBUG: VaultDetailsPage - all vaults:', vaults);
+  console.log('🔍 DEBUG: VaultDetailsPage - vaults with IDs:', vaults.map(v => ({ id: v.id, vaultId: (v as any).vaultId, name: v.name })));
+
+  // Try to find vault by id first, then by vaultId as fallback
+  const vault = vaults.find(v => v.id === vaultId) || vaults.find(v => (v as any).vaultId === vaultId);
+  console.log('🔍 DEBUG: VaultDetailsPage - found vault:', vault);
 
   if (!vault) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-dark-900 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">Vault Not Found</h2>
-          <p className="text-gray-600 mb-6">The vault you're looking for doesn't exist or has been removed.</p>
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Vault Not Found</h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">The vault you're looking for doesn't exist or has been removed.</p>
           <button
             onClick={() => navigate('/sbtc-dashboard')}
             className="bg-bitcoin-600 hover:bg-bitcoin-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -46,7 +54,7 @@ export function VaultDetailsPage() {
 
   // Calculate time-based values
   const now = Math.floor(Date.now() / 1000);
-  const daysSinceLastActivity = Math.floor((now - vault.lastActivity) / 86400);
+  const daysSinceLastActivity = Math.floor((now - vault.lastActivity.getTime()) / 86400);
   const inheritanceDelayDays = Math.floor(vault.inheritanceDelay / 144);
   const daysUntilInheritance = inheritanceDelayDays - daysSinceLastActivity;
   const gracePeriodDays = Math.floor(vault.gracePeriod / 144);
@@ -104,7 +112,7 @@ export function VaultDetailsPage() {
       from: 'user',
       to: vault.id,
       status: 'confirmed' as any,
-      timestamp: new Date(vault.createdAt * 1000),
+      timestamp: vault.createdAt,
       blockHeight: 12345,
       txHash: '0x123...abc'
     },
@@ -116,20 +124,20 @@ export function VaultDetailsPage() {
       from: vault.id,
       to: 'heir',
       status: 'confirmed' as any,
-      timestamp: new Date(vault.lastActivity * 1000),
+      timestamp: vault.lastActivity,
       blockHeight: 12346,
       txHash: '0x456...def'
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-dark-900 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={() => navigate('/sbtc-dashboard')}
-            className="flex items-center text-gray-600 hover:text-gray-900 mb-4"
+            className="flex items-center text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white mb-4"
           >
             <ChevronLeftIcon className="h-5 w-5 mr-1" />
             Back to Dashboard
@@ -137,7 +145,7 @@ export function VaultDetailsPage() {
           
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900">{vault.vaultName}</h1>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{vault.name}</h1>
               <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium mt-2 ${
                 getStatusColor() === 'green' ? 'bg-green-100 text-green-800' :
                 getStatusColor() === 'yellow' ? 'bg-yellow-100 text-yellow-800' :
@@ -161,9 +169,9 @@ export function VaultDetailsPage() {
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-8">
             {/* sBTC Balance */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
+            <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-semibold text-gray-900 flex items-center">
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white flex items-center">
                   <CurrencyDollarIcon className="h-6 w-6 mr-2 text-bitcoin-600" />
                   sBTC Balance
                 </h2>
@@ -187,35 +195,35 @@ export function VaultDetailsPage() {
               </div>
               
               <div className="text-center py-8">
-                <div className="text-4xl font-bold text-gray-900 mb-2">
+                <div className="text-4xl font-bold text-gray-900 dark:text-white mb-2">
                   {sbtcBalance.toFixed(8)} sBTC
                 </div>
-                <div className="text-xl text-gray-600 mb-4">
+                <div className="text-xl text-gray-600 dark:text-gray-400 mb-4">
                   ${usdValue.toLocaleString()} USD
                 </div>
                 
                 <div className="grid grid-cols-2 gap-4 mt-6">
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-sm text-gray-600">Minimum Inheritance</div>
-                    <div className="font-semibold">{(vault.minimumInheritance / 100000000).toFixed(8)} sBTC</div>
+                  <div className="bg-gray-50 dark:bg-dark-700 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Minimum Inheritance</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{(vault.minimumInheritance / 100000000).toFixed(8)} sBTC</div>
                   </div>
-                  <div className="bg-gray-50 rounded-lg p-4">
-                    <div className="text-sm text-gray-600">Distribution Mode</div>
-                    <div className="font-semibold">{vault.autoDistribute ? 'Auto' : 'Manual'}</div>
+                  <div className="bg-gray-50 dark:bg-dark-700 rounded-lg p-4">
+                    <div className="text-sm text-gray-600 dark:text-gray-400">Distribution Mode</div>
+                    <div className="font-semibold text-gray-900 dark:text-white">{vault.autoDistribute ? 'Auto' : 'Manual'}</div>
                   </div>
                 </div>
               </div>
             </div>
 
             {/* Inheritance Timeline */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-6">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <ClockIcon className="h-6 w-6 mr-2 text-blue-600" />
                 Inheritance Timeline
               </h2>
               
               <div className="space-y-4">
-                <div className="flex justify-between text-sm text-gray-600">
+                <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400">
                   <span>Days since last activity: {daysSinceLastActivity}</span>
                   <span>Inheritance delay: {inheritanceDelayDays} days</span>
                 </div>
@@ -285,23 +293,23 @@ export function VaultDetailsPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Vault Info */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Vault Information</h3>
+            <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Vault Information</h3>
               <div className="space-y-3">
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Vault ID:</span>
-                  <span className="font-mono text-sm">{vault.id}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Vault ID:</span>
+                  <span className="font-mono text-sm text-gray-900 dark:text-white">{vault.id}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Created:</span>
-                  <span className="text-sm">{new Date(vault.createdAt * 1000).toLocaleDateString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Created:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{vault.createdAt.toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Last Activity:</span>
-                  <span className="text-sm">{new Date(vault.lastActivity * 1000).toLocaleDateString()}</span>
+                  <span className="text-gray-600 dark:text-gray-400">Last Activity:</span>
+                  <span className="text-sm text-gray-900 dark:text-white">{vault.lastActivity.toLocaleDateString()}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-600">Status:</span>
+                  <span className="text-gray-600 dark:text-gray-400">Status:</span>
                   <span className={`text-sm font-medium ${
                     vault.status === 'active' ? 'text-green-600' : 'text-red-600'
                   }`}>
@@ -312,8 +320,8 @@ export function VaultDetailsPage() {
             </div>
 
             {/* Heirs */}
-            <div className="bg-white rounded-lg border border-gray-200 p-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center">
+            <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
                 <UserGroupIcon className="h-5 w-5 mr-2 text-blue-600" />
                 Heirs
               </h3>

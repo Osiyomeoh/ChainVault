@@ -75,6 +75,39 @@ export interface SBTCTransaction {
   txHash: string;
 }
 
+// New types for our contract integration
+export interface CreateSBTCVaultData {
+  vaultId: string;
+  name: string;
+  inheritanceDelay: number;
+  privacyLevel: PrivacyLevel;
+  gracePeriod: number;
+  initialSbtcAmount?: number;
+  autoDistribute: boolean;
+  minimumInheritance: number;
+  beneficiaries: CreateBeneficiaryData[];
+}
+
+export interface CreateBeneficiaryData {
+  address: string;
+  allocationPercentage: number;
+  minimumSbtcAmount: number;
+}
+
+export interface SBTCVaultStats {
+  totalVaults: number;
+  totalSbtcLocked: number;
+  totalSbtcValue: number;
+  activeVaults: number;
+  nearDeadlineVaults: number;
+}
+
+export interface InheritanceCalculation {
+  grossAmount: number;
+  feeAmount: number;
+  netAmount: number;
+}
+
 export enum VaultStatus {
   ACTIVE = 'active',
   INHERITANCE_TRIGGERED = 'inherit-triggered',

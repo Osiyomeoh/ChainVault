@@ -59,7 +59,7 @@ export function ConnectWallet({
         className={`${baseClasses} bg-green-600 hover:bg-red-600 text-white focus:ring-green-500 shadow-sm hover:shadow-md ${sizeClasses[size]} ${className}`}
       >
         <CheckIcon className={iconSizes[size]} />
-        <span>{user.stacksAddress ? formatAddress(user.stacksAddress) : 'Connected'}</span>
+        <span>{user.address ? formatAddress(user.address) : 'Connected'}</span>
       </motion.button>
     );
   }

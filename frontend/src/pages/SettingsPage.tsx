@@ -11,39 +11,14 @@ import {
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 
 export function SettingsPage() {
   const { user } = useAuth();
   const { language, setLanguage: setLanguageContext, t } = useLanguage();
-  const [darkMode, setDarkMode] = useState(false);
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [notifications, setNotifications] = useState(true);
   const [autoLock, setAutoLock] = useState(true);
-
-  // Initialize dark mode from localStorage
-  useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode') === 'true';
-    setDarkMode(savedDarkMode);
-    
-    // Apply dark mode to document
-    if (savedDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, []);
-
-  // Handle dark mode toggle
-  const toggleDarkMode = () => {
-    const newDarkMode = !darkMode;
-    setDarkMode(newDarkMode);
-    localStorage.setItem('darkMode', newDarkMode.toString());
-    
-    if (newDarkMode) {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  };
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -222,12 +197,12 @@ export function SettingsPage() {
                 <div className="flex items-center space-x-3">
                   <div className="w-10 h-10 bg-bitcoin-600 rounded-full flex items-center justify-center">
                     <span className="text-white text-sm font-medium">
-                      {user?.stacksAddress ? user.stacksAddress.slice(2, 4).toUpperCase() : 'U'}
+                      {user?.address ? user.address.slice(2, 4).toUpperCase() : 'U'}
                     </span>
                   </div>
                   <div>
                     <p className="text-sm font-medium text-gray-900 dark:text-white">
-                      {user?.stacksAddress ? formatAddress(user.stacksAddress) : 'User'}
+                      {user?.address ? formatAddress(user.address) : 'User'}
                     </p>
                     <p className="text-xs text-gray-500 dark:text-gray-400">Connected Wallet</p>
                   </div>

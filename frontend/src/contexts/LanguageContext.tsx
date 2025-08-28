@@ -101,7 +101,6 @@ const translations = {
     'gracePeriod': 'Grace Period (days)',
     'privacyLevel': 'Privacy Level',
     'sbtcConfig': 'sBTC Configuration',
-    'beneficiaries': 'Beneficiaries',
     'reviewDeploy': 'Review & Deploy',
     
     // Settings
@@ -118,7 +117,6 @@ const translations = {
     'selectLanguage': 'Select Language',
     
     // Actions
-    'createVault': 'Create Vault',
     'addBeneficiary': 'Add Beneficiary',
     'deployVault': 'Deploy Vault',
     'deployingVault': 'Deploying Vault...',
@@ -176,7 +174,6 @@ const translations = {
     'gracePeriod': 'Período de Gracia (días)',
     'privacyLevel': 'Nivel de Privacidad',
     'sbtcConfig': 'Configuración de sBTC',
-    'beneficiaries': 'Beneficiarios',
     'reviewDeploy': 'Revisar y Desplegar',
     
     // Settings
@@ -193,7 +190,6 @@ const translations = {
     'selectLanguage': 'Seleccionar Idioma',
     
     // Actions
-    'createVault': 'Crear Bóveda',
     'addBeneficiary': 'Agregar Beneficiario',
     'deployVault': 'Desplegar Bóveda',
     'deployingVault': 'Desplegando Bóveda...',
@@ -251,7 +247,6 @@ const translations = {
     'gracePeriod': 'Période de Grâce (jours)',
     'privacyLevel': 'Niveau de Confidentialité',
     'sbtcConfig': 'Configuration sBTC',
-    'beneficiaries': 'Bénéficiaires',
     'reviewDeploy': 'Examiner et Déployer',
     
     // Settings
@@ -268,7 +263,6 @@ const translations = {
     'selectLanguage': 'Sélectionner la Langue',
     
     // Actions
-    'createVault': 'Créer un Coffre',
     'addBeneficiary': 'Ajouter un Bénéficiaire',
     'deployVault': 'Déployer le Coffre',
     'deployingVault': 'Déploiement du Coffre...',
@@ -326,7 +320,6 @@ const translations = {
     'gracePeriod': 'Gnadenfrist (Tage)',
     'privacyLevel': 'Datenschutzstufe',
     'sbtcConfig': 'sBTC-Konfiguration',
-    'beneficiaries': 'Begünstigte',
     'reviewDeploy': 'Überprüfen & Bereitstellen',
     
     // Settings
@@ -401,7 +394,6 @@ const translations = {
     'gracePeriod': '宽限期（天）',
     'privacyLevel': '隐私级别',
     'sbtcConfig': 'sBTC配置',
-    'beneficiaries': '受益人',
     'reviewDeploy': '审查和部署',
     
     // Settings

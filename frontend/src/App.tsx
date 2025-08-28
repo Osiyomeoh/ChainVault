@@ -7,6 +7,7 @@ import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { DashboardProvider } from './contexts/DashboardContext';
 import { LanguageProvider } from './contexts/LanguageContext';
 import { SBTCVaultProvider } from './contexts/SBTCVaultContext';
+import { DarkModeProvider } from './contexts/DarkModeContext';
 
 // Layout Components
 import { Layout } from './components/Layout';
@@ -47,10 +48,11 @@ function ProtectedRoute({ children }: ProtectedRouteProps) {
 
 function App() {
   return (
-    <AuthProvider>
-      <DashboardProvider>
-        <LanguageProvider>
-          <SBTCVaultProvider>
+    <DarkModeProvider>
+      <AuthProvider>
+        <DashboardProvider>
+          <LanguageProvider>
+            <SBTCVaultProvider>
             <Router>
               <div className="App">
                 <Routes>
@@ -148,7 +150,8 @@ function App() {
           </SBTCVaultProvider>
         </LanguageProvider>
       </DashboardProvider>
-    </AuthProvider>
+      </AuthProvider>
+    </DarkModeProvider>
   );
 }
 

@@ -7,9 +7,12 @@ import {
   ShieldCheckIcon,
   UserCircleIcon,
   ArrowRightOnRectangleIcon,
-  CogIcon
+  CogIcon,
+  SunIcon,
+  MoonIcon
 } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
+import { useDarkMode } from '../contexts/DarkModeContext';
 import { ConnectWallet } from './ConnectWallet';
 
 interface HeaderProps {
@@ -18,6 +21,7 @@ interface HeaderProps {
 
 export function Header({ onMenuClick }: HeaderProps) {
   const { isSignedIn, user, signOut } = useAuth();
+  const { darkMode, toggleDarkMode } = useDarkMode();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
@@ -81,6 +85,19 @@ export function Header({ onMenuClick }: HeaderProps) {
             </nav>
           )}
 
+          {/* Dark Mode Toggle */}
+          <button
+            onClick={toggleDarkMode}
+            className="p-2 rounded-lg text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-gray-100 dark:hover:bg-dark-700 transition-colors"
+            title={darkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+          >
+            {darkMode ? (
+              <SunIcon className="h-5 w-5" />
+            ) : (
+              <MoonIcon className="h-5 w-5" />
+            )}
+          </button>
+
           {/* User Menu */}
           <div className="flex items-center space-x-4">
             {isSignedIn ? (
@@ -91,7 +108,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                 >
                   <UserCircleIcon className="h-5 w-5 text-gray-600 dark:text-gray-400" />
                   <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-                    {user?.stacksAddress ? formatAddress(user.stacksAddress) : 'User'}
+                    {user?.address ? formatAddress(user.address) : 'User'}
                   </span>
                 </button>
 
@@ -107,7 +124,7 @@ export function Header({ onMenuClick }: HeaderProps) {
                         <div className="px-4 py-2 border-b border-gray-100 dark:border-dark-700">
                           <p className="text-xs text-gray-500 dark:text-gray-400">Connected Wallet</p>
                           <p className="text-sm font-medium text-gray-900 dark:text-white">
-                            {user?.stacksAddress ? formatAddress(user.stacksAddress) : 'Unknown'}
+                            {user?.address ? formatAddress(user.address) : 'Unknown'}
                           </p>
                         </div>
                         

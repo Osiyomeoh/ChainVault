@@ -1,3 +1,4 @@
 export { AuthProvider, useAuth } from './AuthContext';
 export { VaultProvider, useVault } from './VaultContext';
-export { SBTCVaultProvider, useSBTCVault } from './SBTCVaultContext';
+export { SBTCVaultProvider, useSBTCVaults } from './SBTCVaultContext';
+export { DashboardProvider, useDashboard } from './DashboardContext';

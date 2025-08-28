@@ -1,6 +1,6 @@
 ---
 id: 0
-name: Testnet deployment
+name: Mock SBTC Token Testnet deployment
 network: testnet
 stacks-node: "https://api.testnet.hiro.so"
 bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.stacks.co:18332"
@@ -13,13 +13,6 @@ plan:
             expected-sender: ST1KJNKBF5WEQKNPY6WYVE87VV0GSQSTA1BGY15HX
             cost: 34770
             path: contracts/mock-sbtc-token.clar
-            anchor-block-only: true
-            clarity-version: 3
-        - contract-publish:
-            contract-name: chainvault-core-v3
-            expected-sender: ST1KJNKBF5WEQKNPY6WYVE87VV0GSQSTA1BGY15HX
-            cost: 203120
-            path: contracts/chainvault-core.clar
             anchor-block-only: true
             clarity-version: 3
       epoch: "3.1"

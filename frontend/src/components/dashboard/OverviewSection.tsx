@@ -19,7 +19,7 @@ export function OverviewSection({ vaults, stats }: OverviewSectionProps) {
   // Filter vaults by status
   const activeVaults = vaults.filter(v => v.status === 'active');
   const warningVaults = vaults.filter(v => {
-    const daysSinceLastActivity = Math.floor((Date.now() / 1000 - v.lastActivity) / 86400);
+    const daysSinceLastActivity = Math.floor((Date.now() - v.lastActivity.getTime()) / 86400);
     const inheritanceDelayDays = Math.floor(v.inheritanceDelay / 144);
     return daysSinceLastActivity > inheritanceDelayDays * 0.8; // 80% threshold
   });
