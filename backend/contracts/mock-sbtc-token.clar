@@ -64,10 +64,9 @@
 (define-read-only (get-token-uri)
   (ok none))
 
-;; Mint tokens (for testing purposes)
+;; Mint tokens (for testing purposes - any user can mint)
 (define-public (mint (amount uint) (recipient principal))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
     (asserts! (> amount u0) ERR_INVALID_AMOUNT)
     
     (try! (ft-mint? mock-sbtc amount recipient))
@@ -101,10 +100,9 @@
     
     (ok true)))
 
-;; Batch mint for testing setup (mint to multiple accounts)
+;; Batch mint for testing setup (any user can mint to multiple accounts)
 (define-public (batch-mint (recipients (list 10 {recipient: principal, amount: uint})))
   (begin
-    (asserts! (is-eq tx-sender CONTRACT_OWNER) ERR_UNAUTHORIZED)
     (fold mint-to-recipient recipients u0)
     (ok true)))
 

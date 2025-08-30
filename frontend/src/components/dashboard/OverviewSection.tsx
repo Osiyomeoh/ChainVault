@@ -28,74 +28,74 @@ export function OverviewSection({ vaults, stats }: OverviewSectionProps) {
   return (
     <div className="space-y-8">
       {/* Stats Overview */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div className="bg-white dark:bg-dark-800 p-6 rounded-lg border border-gray-200 dark:border-dark-700">
+      <div className="tour-complete grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
+        <div className="bg-white dark:bg-dark-800 p-3 sm:p-6 rounded-lg border border-gray-200 dark:border-dark-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <ShieldCheckIcon className="h-8 w-8 text-green-600 dark:text-green-400" />
+              <ShieldCheckIcon className="h-6 w-6 sm:h-8 sm:w-8 text-green-600 dark:text-green-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalVaults || vaults.length}</p>
-              <p className="text-gray-600 dark:text-gray-400">Total Vaults</p>
+            <div className="ml-2 sm:ml-4">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">{stats?.totalVaults || vaults.length}</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Vaults</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-800 p-6 rounded-lg border border-gray-200 dark:border-dark-700">
+        <div className="bg-white dark:bg-dark-800 p-3 sm:p-6 rounded-lg border border-gray-200 dark:border-dark-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <CurrencyDollarIcon className="h-8 w-8 text-bitcoin-600 dark:text-bitcoin-400" />
+              <CurrencyDollarIcon className="h-6 w-6 sm:h-8 sm:w-8 text-bitcoin-600 dark:text-bitcoin-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="ml-2 sm:ml-4">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {stats?.totalSbtcLocked ? (stats.totalSbtcLocked / 100000000).toFixed(4) : '0.0000'}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Total sBTC</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total sBTC</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-800 p-6 rounded-lg border border-gray-200 dark:border-dark-700">
+        <div className="bg-white dark:bg-dark-800 p-3 sm:p-6 rounded-lg border border-gray-200 dark:border-dark-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <ChartBarIcon className="h-8 w-8 text-purple-600 dark:text-purple-400" />
+              <ChartBarIcon className="h-6 w-6 sm:h-8 sm:w-8 text-purple-600 dark:text-purple-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="ml-2 sm:ml-4">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 ${stats?.totalSbtcValue ? stats.totalSbtcValue.toLocaleString() : '0'}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Total Value</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Total Value</p>
             </div>
           </div>
         </div>
 
-        <div className="bg-white dark:bg-dark-800 p-6 rounded-lg border border-gray-200 dark:border-dark-700">
+        <div className="bg-white dark:bg-dark-800 p-3 sm:p-6 rounded-lg border border-gray-200 dark:border-dark-700">
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <ExclamationTriangleIcon className="h-8 w-8 text-yellow-600 dark:text-yellow-400" />
+              <ExclamationTriangleIcon className="h-6 w-6 sm:h-8 sm:w-8 text-yellow-600 dark:text-yellow-400" />
             </div>
-            <div className="ml-4">
-              <p className="text-2xl font-bold text-gray-900 dark:text-white">
+            <div className="ml-2 sm:ml-4">
+              <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white">
                 {stats?.nearDeadlineVaults || warningVaults.length}
               </p>
-              <p className="text-gray-600 dark:text-gray-400">Need Attention</p>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Need Attention</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Quick Actions */}
-      <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-6">
-        <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="bg-white dark:bg-dark-800 rounded-lg border border-gray-200 dark:border-dark-700 p-4 sm:p-6">
+        <h2 className="text-lg sm:text-xl font-semibold mb-4 text-gray-900 dark:text-white">Quick Actions</h2>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
           <Link
             to="/create-vault"
-            className="flex items-center p-4 border border-gray-200 dark:border-dark-600 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
+            className="flex items-center p-3 sm:p-4 border border-gray-200 dark:border-dark-600 rounded-lg hover:bg-gray-50 dark:hover:bg-dark-700 transition-colors"
           >
-            <PlusIcon className="h-8 w-8 text-bitcoin-600 dark:text-bitcoin-400 mr-3" />
+            <PlusIcon className="h-6 w-6 sm:h-8 sm:w-8 text-bitcoin-600 dark:text-bitcoin-400 mr-2 sm:mr-3" />
             <div>
-              <h3 className="font-medium text-gray-900 dark:text-white">Create Vault</h3>
-              <p className="text-sm text-gray-600 dark:text-gray-400">Set up new sBTC inheritance</p>
+              <h3 className="font-medium text-gray-900 dark:text-white text-sm sm:text-base">Create Vault</h3>
+              <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">Set up new sBTC inheritance</p>
             </div>
           </Link>
           

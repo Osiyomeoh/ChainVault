@@ -121,14 +121,14 @@ export function SBTCVaultCard({
   return (
     <motion.div
       whileHover={{ y: -2 }}
-      className={`rounded-lg border-2 p-6 transition-all duration-200 hover:shadow-lg ${getStatusColor()}`}
+      className={`rounded-lg border-2 p-4 sm:p-6 transition-all duration-200 hover:shadow-lg ${getStatusColor()}`}
     >
       {/* Header */}
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 space-y-2 sm:space-y-0">
         <div className="flex items-center space-x-3">
           {getStatusIcon()}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900">{vault.vaultName}</h3>
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 break-words">{vault.vaultName}</h3>
             <p className="text-sm text-gray-600">{getStatusText()}</p>
           </div>
         </div>
@@ -150,16 +150,16 @@ export function SBTCVaultCard({
 
       {/* sBTC Balance */}
       <div className="bg-gray-50 rounded-lg p-4 mb-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col space-y-3 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
           <div>
-            <div className="text-2xl font-bold text-gray-900">
+            <div className="text-xl sm:text-2xl font-bold text-gray-900 break-words">
               {sbtcBalance.toFixed(8)} sBTC
             </div>
             <div className="text-sm text-gray-600">
               ${usdValue.toLocaleString()} USD (estimated)
             </div>
           </div>
-          <div className="text-right">
+          <div className="text-left sm:text-right space-y-1">
             <div className="text-sm text-gray-600">
               Min. Inheritance: {(vault.minimumInheritance / 100000000).toFixed(8)} sBTC
             </div>
@@ -229,19 +229,19 @@ export function SBTCVaultCard({
       </div>
 
       {/* Actions */}
-      <div className="flex space-x-3">
+      <div className="flex flex-col space-y-3 sm:flex-row sm:space-x-3 sm:space-y-0">
         {!isPastDeadline && (
           <button
             onClick={handleProofOfLife}
             disabled={updatingProof}
-            className="flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+            className="tour-proof-of-life flex-1 bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white px-4 py-3 sm:py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
           >
             {updatingProof ? (
               <LoadingSpinner size="sm" className="text-white" />
             ) : (
               <ClockIcon className="h-4 w-4" />
             )}
-            <span>Update Proof of Life</span>
+            <span className="text-sm sm:text-base">Update Proof of Life</span>
           </button>
         )}
         
@@ -249,20 +249,20 @@ export function SBTCVaultCard({
           <button
             onClick={handleTriggerInheritance}
             disabled={triggeringInheritance}
-            className="flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
+            className="tour-inheritance flex-1 bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white px-4 py-3 sm:py-2 rounded-lg font-medium transition-colors flex items-center justify-center space-x-2"
           >
             {triggeringInheritance ? (
               <LoadingSpinner size="sm" className="text-white" />
             ) : (
               <ExclamationTriangleIcon className="h-4 w-4" />
             )}
-            <span>Trigger Inheritance</span>
+            <span className="text-sm sm:text-base">Trigger Inheritance</span>
           </button>
         )}
         
         <button
           onClick={() => onViewDetails(vault)}
-          className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+          className="px-4 py-3 sm:py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm sm:text-base"
         >
           View Details
         </button>

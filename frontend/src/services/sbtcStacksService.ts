@@ -47,9 +47,9 @@ interface CreateVaultParams {
 
 class SBTCStacksService {
   private contractAddress: string;
-  private contractName = 'chainvault-core-v3';
+  private contractName: string;
   private sbtcTokenAddress: string;
-  private sbtcTokenName = 'mock-sbtc-token';
+  private sbtcTokenName = 'mock-sbtc-token-v2';
   private network: StacksNetwork;
   private createdVaults: Map<string, any> = new Map(); // Track created vaults
   private userAddress: string | null = null; // Current user address for read-only calls
@@ -62,6 +62,10 @@ class SBTCStacksService {
     
     // Set network based on DEFAULT_NETWORK
     this.network = (DEFAULT_NETWORK as string) === 'mainnet' ? STACKS_MAINNET : STACKS_TESTNET;
+    
+    // Get contract names from network configuration
+    this.contractName = networkConfig.chainvaultContract.split('.')[1];
+    this.sbtcTokenName = networkConfig.mockSbtcContract.split('.')[1];
   }
 
   // Set the current user address for read-only function calls
@@ -107,7 +111,7 @@ class SBTCStacksService {
         functionName,
         functionArgs,
         network: networkString,
-        // Note: postConditions support varies by wallet
+        postConditions: postConditions && postConditions.length > 0 ? postConditions : undefined
       });
 
       console.log('Contract call successful:', response);
@@ -245,19 +249,34 @@ class SBTCStacksService {
 
   async depositSBTC(vaultId: string, amount: number): Promise<string> {
     console.log('Depositing sBTC to vault:', { vaultId, amount });
-
+  
     if (amount <= 0) {
       throw new Error('Deposit amount must be greater than 0');
     }
-
+  
     const functionArgs: ClarityValue[] = [
       stringUtf8CV(vaultId),
       uintCV(amount)
     ];
-
+  
     try {
-      // Simplified approach - let wallet handle post conditions
-      return await this.executeContractCall('deposit-sbtc', functionArgs, []);
+      console.log('Depositing amount in sats:', amount);
+      
+      // Use PostConditionMode.Allow to bypass all post-condition checks
+      const networkString = this.network === STACKS_MAINNET ? 'mainnet' : 'testnet';
+      const contract = `${this.contractAddress}.${this.contractName}` as const;
+      
+      const response = await request('stx_callContract', {
+        contract,
+        functionName: 'deposit-sbtc',
+        functionArgs,
+        network: networkString,
+        postConditionMode: 'allow' // This bypasses post-condition validation
+      });
+  
+      console.log('Contract call successful:', response);
+      return response.txid || 'transaction-submitted';
+      
     } catch (error) {
       console.error('Failed to deposit sBTC:', error);
       throw new Error(`Failed to deposit sBTC: ${error}`);
@@ -278,7 +297,7 @@ class SBTCStacksService {
 
     try {
       // No post conditions needed for withdrawals (contract sends to user)
-      return await this.executeContractCall('withdraw-sbtc', functionArgs);
+      return await this.executeContractCall('withdraw-sbtc', functionArgs, undefined);
     } catch (error) {
       console.error('Failed to withdraw sBTC:', error);
       throw new Error(`Failed to withdraw sBTC: ${error}`);
@@ -385,20 +404,41 @@ class SBTCStacksService {
   }
 
   // Read-only functions - simplified to avoid import issues
-  // For now, return mock data until we resolve the API calls
+  // Get vault sBTC balance using the same working method as user balance
   async getVaultSBTCBalance(vaultId: string): Promise<number> {
     console.log('Getting vault sBTC balance for:', { vaultId });
     
     try {
-      // Try to get real balance from contract
-      const balanceData = await this.callReadOnlyFunction('get-vault-sbtc-balance', [vaultId]);
-      if (balanceData) {
-        const parsed = this.parseClarityVaultData(balanceData);
-        return parsed || 0;
+      // Use the same working method as getUserMockSbtcBalance
+      console.log('Using @stacks/transactions method for vault balance retrieval...');
+      
+      const { fetchCallReadOnlyFunction, stringUtf8CV } = await import('@stacks/transactions');
+      
+      console.log('Calling get-vault-sbtc-balance function...');
+      
+      const balanceResponse = await fetchCallReadOnlyFunction({
+        contractAddress: this.contractAddress,
+        contractName: this.contractName,
+        functionName: 'get-vault-sbtc-balance',
+        functionArgs: [stringUtf8CV(vaultId)],
+        network: this.network,
+        senderAddress: this.userAddress || 'ST1KJNKBF5WEQKNPY6WYVE87VV0GSQSTA1BGY15HX'
+      });
+      
+      console.log('Vault balance response:', balanceResponse);
+      
+      if (balanceResponse && balanceResponse.type === 'uint') {
+        const balance = Number(balanceResponse.value);
+        console.log('Successfully retrieved vault balance:', balance);
+        return balance;
       }
+      
+      console.log('Unexpected vault balance response format:', balanceResponse);
       return 0;
+      
     } catch (error) {
-      console.log('Failed to get vault sBTC balance:', error);
+      console.log('@stacks/transactions method failed for vault balance:', error);
+      console.error('Full error:', error);
       return 0;
     }
   }
@@ -1350,6 +1390,237 @@ class SBTCStacksService {
       console.error('Error parsing Clarity vault data:', error);
       return null;
     }
+  }
+
+  // Get user's mock sBTC balance
+  async getUserMockSbtcBalance(userAddress: string): Promise<number> {
+    try {
+      console.log('Getting user mock sBTC balance for:', userAddress);
+      console.log('Using contract:', `${this.contractAddress}.${this.sbtcTokenName}`);
+      
+      // Use the working method from the backend tests (same as test-balance-simple.js)
+      try {
+        console.log('Using @stacks/transactions method for balance retrieval...');
+        
+        // Import the working function from @stacks/transactions
+        const { fetchCallReadOnlyFunction, standardPrincipalCV } = await import('@stacks/transactions');
+        
+        console.log('Calling get-balance function...');
+        
+        const balanceResponse = await fetchCallReadOnlyFunction({
+          contractAddress: this.contractAddress,
+          contractName: this.sbtcTokenName,
+          functionName: 'get-balance',
+          functionArgs: [standardPrincipalCV(userAddress)],
+          network: this.network,
+          senderAddress: userAddress
+        });
+        
+        console.log('Balance response:', balanceResponse);
+        
+        if (balanceResponse && balanceResponse.type === 'uint') {
+          const balance = Number(balanceResponse.value);
+          console.log('Successfully retrieved balance:', balance);
+          return balance;
+        } else if (balanceResponse && typeof balanceResponse === 'object' && 'type' in balanceResponse) {
+          // Handle response wrapper - cast to any to handle different response types
+          const responseValue = (balanceResponse as any);
+          if (responseValue.value && responseValue.value.type === 'ok' && responseValue.value.value) {
+            const balance = Number(responseValue.value.value.value);
+            console.log('Successfully retrieved balance from response wrapper:', balance);
+            return balance;
+          } else if (responseValue.value) {
+            console.log('Contract returned error:', responseValue.value);
+          }
+        }
+        
+        console.log('Unexpected balance response format:', balanceResponse);
+        return 0;
+        
+      } catch (stacksError) {
+        console.log('@stacks/transactions method failed:', stacksError);
+        console.error('Full error:', stacksError);
+        return 0;
+      }
+      
+    } catch (error) {
+      console.error('Failed to get user mock sBTC balance:', error);
+      return 0;
+    }
+  }
+
+  // Check wallet connection status
+  checkWalletConnection(): { connected: boolean; walletType: string; network: string } {
+    if (typeof window === 'undefined') {
+      return { connected: false, walletType: 'none', network: 'none' };
+    }
+
+    const wallet = (window as any);
+    let walletType = 'none';
+    let connected = false;
+
+    if (wallet.StacksProvider) {
+      walletType = 'Stacks Connect (Hiro)';
+      connected = true;
+    } else if (wallet.stacks) {
+      walletType = 'Legacy Stacks';
+      connected = true;
+    } else if (wallet.XverseProvider) {
+      walletType = 'Xverse';
+      connected = true;
+    } else if (wallet.request) {
+      walletType = 'Direct Request';
+      connected = true;
+    }
+
+    return {
+      connected,
+      walletType,
+      network: this.network === STACKS_MAINNET ? 'mainnet' : 'testnet'
+    };
+  }
+
+  // Mint mock sBTC tokens to user
+  async mintMockSBTC(userAddress: string, amount: number): Promise<string> {
+    try {
+      console.log('Minting mock sBTC tokens:', { userAddress, amount });
+      console.log('Contract details:', {
+        contractAddress: this.contractAddress,
+        sbtcTokenName: this.sbtcTokenName,
+        fullContract: `${this.contractAddress}.${this.sbtcTokenName}`,
+        network: this.network === STACKS_MAINNET ? 'mainnet' : 'testnet'
+      });
+      
+      // Check if we're in a browser environment
+      if (typeof window === 'undefined') {
+        throw new Error('Cannot mint tokens outside of browser environment');
+      }
+      
+      // Use the same request method that works for vault creation
+      console.log('Using new Stacks Connect request API for minting...');
+      
+      // Convert network to string format expected by request method
+      const networkString = this.network === STACKS_MAINNET ? 'mainnet' : 'testnet';
+      
+      // Prepare contract identifier
+      const contract = `${this.contractAddress}.${this.sbtcTokenName}` as const;
+      
+      console.log('Mint request parameters:', {
+        method: 'stx_callContract',
+        contract,
+        functionName: 'mint',
+        functionArgsCount: 2,
+        network: networkString
+      });
+
+      // Use the new request method for minting (same as vault creation)
+      const response = await request('stx_callContract', {
+        contract,
+        functionName: 'mint',
+        functionArgs: [
+          uintCV(amount),
+          standardPrincipalCV(userAddress)
+        ],
+        network: networkString
+      });
+
+      console.log('Mint successful:', response);
+      return response.txid || 'transaction-submitted';
+      
+    } catch (error) {
+      console.error('Failed to mint mock sBTC:', error);
+      throw new Error(`Failed to mint mock sBTC: ${error}`);
+    }
+  }
+
+  // Get real transaction history for a vault
+  async getVaultTransactions(vaultId: string): Promise<any[]> {
+    try {
+      console.log('Fetching real transaction history for vault:', vaultId);
+      
+      // Get recent blocks to search for events
+      const networkString = this.network === STACKS_MAINNET ? 'mainnet' : 'testnet';
+      const apiUrl = networkString === 'testnet' 
+        ? 'https://api.testnet.hiro.so' 
+        : 'https://api.hiro.so';
+      
+      // Search for contract events related to this vault
+      const response = await fetch(
+        `${apiUrl}/extended/v1/address/${this.contractAddress}/transactions?limit=50`
+      );
+      
+      if (response.ok) {
+        const transactions = await response.json();
+        console.log('Found transactions:', transactions);
+        
+        // Filter transactions that involve this vault
+        const vaultTransactions = transactions.results.filter((tx: any) => {
+          // Look for transactions that mention this vault ID
+          const contractCall = tx.contract_call;
+          if (contractCall && contractCall.contract_id === `${this.contractAddress}.${this.contractName}`) {
+            // Check if the function call involves this vault
+            const functionArgs = contractCall.function_args || [];
+            return functionArgs.some((arg: any) => 
+              arg.name === 'vault-id' && arg.value.includes(vaultId)
+            );
+          }
+          return false;
+        });
+        
+        console.log('Vault-specific transactions:', vaultTransactions);
+        
+        // Convert to our transaction format
+        const formattedTransactions = vaultTransactions.map((tx: any, index: number) => ({
+          id: `tx-${tx.tx_id}-${index}`,
+          vaultId: vaultId,
+          type: this.determineTransactionType(tx),
+          amount: this.extractTransactionAmount(tx),
+          from: tx.sender_address,
+          to: this.contractAddress,
+          status: tx.tx_status === 'success' ? 'confirmed' : 'pending',
+          timestamp: new Date(tx.burn_block_time * 1000),
+          blockHeight: tx.burn_block_height,
+          txHash: tx.tx_id
+        }));
+        
+        return formattedTransactions;
+      }
+      
+      return [];
+    } catch (error) {
+      console.error('Failed to fetch vault transactions:', error);
+      return [];
+    }
+  }
+  
+  // Determine transaction type based on function called
+  private determineTransactionType(transaction: any): string {
+    const functionName = transaction.contract_call?.function_name;
+    
+    switch (functionName) {
+      case 'deposit-sbtc':
+        return 'deposit';
+      case 'withdraw-sbtc':
+        return 'withdrawal';
+      case 'trigger-sbtc-inheritance':
+        return 'inheritance-triggered';
+      case 'claim-sbtc-inheritance':
+        return 'inheritance-payout';
+      default:
+        return 'unknown';
+    }
+  }
+  
+  // Extract transaction amount from function arguments
+  private extractTransactionAmount(transaction: any): number {
+    const functionArgs = transaction.contract_call?.function_args || [];
+    const amountArg = functionArgs.find((arg: any) => arg.name === 'amount');
+    
+    if (amountArg && amountArg.value) {
+      return parseInt(amountArg.value) || 0;
+    }
+    
+    return 0;
   }
 
   // Get network info

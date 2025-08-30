@@ -1,7 +1,5 @@
-
-
 ;; Contract name for versioning
-(define-constant CONTRACT_NAME "chainvault-core-v3")
+(define-constant CONTRACT_NAME "chainvault-core-v7")
 
 ;; String constants for consistent UTF-8 usage
 (define-constant STATUS_ACTIVE "active")
@@ -32,7 +30,10 @@
 (define-data-var total-sbtc-locked uint u0)
 
 ;; sBTC token contract reference (this would be the actual sBTC contract address)
-(define-constant SBTC_TOKEN .mock-sbtc-token)
+(define-constant SBTC_TOKEN .mock-sbtc-token-v2)
+
+;; Mock sBTC token reference for direct ft-transfer? calls
+;; Note: We'll use contract calls but with proper transfer logic
 
 ;; Enhanced inheritance vaults with sBTC balance tracking
 (define-map inheritance-vaults
@@ -117,9 +118,9 @@
 ;; Simple user vault tracking - maps user address to list of vault IDs
 (define-map user-vaults
   { user: principal }
-  { vault-ids: (list 50 (string-utf8 36)) }
-)
+  { vault-ids: (list 100 (string-utf8 36)) }) ;; allow up to 100 instead of 50
 
+;; NEW: Create vault with sBTC funding option
 ;; NEW: Create vault with sBTC funding option
 (define-public (create-sbtc-vault
   (vault-id (string-utf8 36))
@@ -142,7 +143,7 @@
     
     ;; If initial sBTC amount specified, transfer it to the contract
     (if (> initial-sbtc-amount u0)
-      (try! (contract-call? .mock-sbtc-token transfer 
+      (try! (contract-call? .mock-sbtc-token-v2 transfer 
                            initial-sbtc-amount 
                            tx-sender 
                            (as-contract tx-sender) 
@@ -181,12 +182,21 @@
         grace-period-end: (+ inheritance-delay grace-period),
         status: STATUS_ACTIVE
       })
-    
-    ;; Track vault ownership - for now, just create a simple list with current vault
-    ;; In a production system, you'd want to implement proper list management
-    (map-set user-vaults
-      { user: tx-sender }
-      { vault-ids: (list vault-id) })
+  
+    ;; Track vault ownership - append vault-id instead of overwriting
+        ;; Track vault ownership - append vault-id instead of overwriting
+    (match (map-get? user-vaults { user: tx-sender })
+      user-data
+        (let ((existing-vaults (get vault-ids user-data)))
+          (asserts! (< (len existing-vaults) u99) ERR_INVALID_AMOUNT) ;; max 99 + 1 new = 100 total
+          (map-set user-vaults
+            { user: tx-sender }
+            { vault-ids: (unwrap! (as-max-len? (concat existing-vaults (list vault-id)) u100) ERR_INVALID_AMOUNT) }))
+      (map-set user-vaults
+        { user: tx-sender }
+        { vault-ids: (list vault-id) }))
+
+
     
     ;; Update contract statistics
     (var-set total-vaults (+ (var-get total-vaults) u1))
@@ -203,6 +213,7 @@
     
     (ok vault-id)))
 
+
 ;; NEW: Deposit additional sBTC into existing vault
 (define-public (deposit-sbtc (vault-id (string-utf8 36)) (amount uint))
   (let ((vault (unwrap! (map-get? inheritance-vaults { vault-id: vault-id }) ERR_VAULT_NOT_FOUND)))
@@ -213,7 +224,19 @@
 
     
     ;; Transfer sBTC from user to contract
-    (try! (contract-call? .mock-sbtc-token transfer 
+    ;; The user must call this function directly (tx-sender = user)
+    ;; This ensures the transfer authorization works correctly
+    
+    ;; Check if user has sufficient balance before proceeding
+    (let ((user-balance (contract-call? .mock-sbtc-token-v2 get-balance tx-sender)))
+      (asserts! (>= user-balance amount) ERR_INSUFFICIENT_BALANCE))
+    
+    ;; Transfer sBTC from user to contract
+    ;; The user must call this function directly (tx-sender = user)
+    ;; This ensures the transfer authorization works correctly
+    ;; The key insight: tx-sender IS the user when they call this function
+    ;; So this should work correctly
+    (try! (contract-call? .mock-sbtc-token-v2 transfer 
                          amount 
                          tx-sender 
                          (as-contract tx-sender) 
@@ -250,9 +273,13 @@
     (asserts! (>= (get sbtc-balance vault) amount) ERR_INSUFFICIENT_BALANCE)
     
     ;; Transfer sBTC from contract to user
-    (try! (as-contract (contract-call? .mock-sbtc-token transfer 
+    ;; The contract must have sufficient balance to transfer
+    
+    ;; Transfer sBTC from contract to user
+    ;; The contract must have sufficient balance to transfer
+    (try! (as-contract (contract-call? .mock-sbtc-token-v2 transfer 
                                      amount 
-                                     tx-sender 
+                                     (as-contract tx-sender) 
                                      (get owner vault) 
                                      none)))
     
@@ -441,7 +468,7 @@
       (asserts! (>= net-amount (get minimum-sbtc-amount beneficiary)) ERR_INSUFFICIENT_BALANCE)
       
       ;; Transfer sBTC to beneficiary
-      (try! (as-contract (contract-call? .mock-sbtc-token transfer 
+      (try! (as-contract (contract-call? .mock-sbtc-token-v2 transfer 
                                        net-amount 
                                        tx-sender 
                                        (get beneficiary-address beneficiary) 
@@ -518,6 +545,8 @@
 (define-read-only (get-contract-version)
   (var-get contract-version))
 
+
+
 ;; Get all vault IDs for a specific user
 (define-read-only (get-user-vaults (user principal))
   (match (map-get? user-vaults { user: user })
@@ -526,9 +555,10 @@
 
 ;; Get vault count for a specific user
 (define-read-only (get-user-vault-count (user principal))
-  (match (map-get? user-vaults { user: user })
-    user-data (len (get vault-ids user-data))
-    u0))
+  (begin
+    (match (map-get? user-vaults { user: user })
+      user-data (len (get vault-ids user-data))
+      u0)))
 
 ;; Calculate inheritance amount for beneficiary
 (define-read-only (calculate-inheritance-amount 
@@ -566,7 +596,7 @@
     (ok true)))
 
 ;; Initialize contract
-(var-set contract-version u2) ;; Version 2 with sBTC support
+(var-set contract-version u4) ;; Version 4 with fixed sBTC transfers
 (var-set total-vaults u0)
 (var-set inheritance-fee u100) ;; 1% fee
 (var-set total-sbtc-locked u0)

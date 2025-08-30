@@ -1,0 +1,18 @@
+---
+id: 2
+name: ChainVault Core v5 Fixed deployment
+network: testnet
+stacks-node: "https://api.testnet.hiro.so"
+bitcoin-node: "http://blockstack:blockstacksystem@bitcoind.testnet.co:18332"
+plan:
+  batches:
+    - id: 0
+      transactions:
+        - contract-publish:
+            contract-name: chainvault-core-v5
+            expected-sender: ST1KJNKBF5WEQKNPY6WYVE87VV0GSQSTA1BGY15HX
+            cost: 208060
+            path: contracts/chainvault-core.clar
+            anchor-block-only: true
+            clarity-version: 3
+      epoch: "3.1"

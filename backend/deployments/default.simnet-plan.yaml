@@ -60,12 +60,12 @@ plan:
     - id: 0
       transactions:
         - emulated-contract-publish:
-            contract-name: mock-sbtc-token
+            contract-name: mock-sbtc-token-v2
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/mock-sbtc-token.clar
             clarity-version: 3
         - emulated-contract-publish:
-            contract-name: chainvault-core_clar
+            contract-name: chainvault-core-v7
             emulated-sender: ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM
             path: contracts/chainvault-core.clar
             clarity-version: 3
